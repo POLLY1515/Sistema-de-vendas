@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.lacasa.sistemavendas.dto.ProdutoRequestDTO;
+import br.com.lacasa.sistemavendas.dto.ProdutoResponseDTO;
 import br.com.lacasa.sistemavendas.entity.Produto;
 import br.com.lacasa.sistemavendas.service.ProdutoService;
 import jakarta.validation.Valid;
@@ -26,30 +28,30 @@ public class ProdutoController {
 	private final ProdutoService produtoService;
 
 	@PostMapping
-	public ResponseEntity<Produto> cadastrar(@Valid @RequestBody Produto produto){
-		Produto produtoCadastrado = produtoService.cadastrar(produto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(produtoCadastrado);
+	public ResponseEntity<ProdutoResponseDTO> cadastrar(@Valid @RequestBody ProdutoRequestDTO dto){
+		ProdutoResponseDTO produto = produtoService.cadastrar(dto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(produto);
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<Produto>> listarTodos(){
-		List<Produto> produtos = produtoService.listarTodos();
+	public ResponseEntity<List<ProdutoResponseDTO>> listarTodos(){
+		List<ProdutoResponseDTO> produtos = produtoService.listarTodos();
 		return ResponseEntity.ok(produtos);
 		
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Produto> buscarPorId(@PathVariable Long id){
-		Produto produto = produtoService.buscarPorId(id);
+	public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id){
+		ProdutoResponseDTO produto = produtoService.buscarPorId(id);
 		return ResponseEntity.ok(produto);
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<Produto> atualizar(
+	public ResponseEntity<ProdutoResponseDTO> atualizar(
 			@PathVariable Long id, 
-			@Valid @RequestBody Produto produto){
-		Produto produtoAtualizado = produtoService.atualizar(id, produto);
-		return ResponseEntity.ok(produtoAtualizado);
+			@Valid @RequestBody ProdutoRequestDTO dto){
+		ProdutoResponseDTO produto = produtoService.atualizar(id, dto);
+		return ResponseEntity.ok(produto);
 	}
 	
 	@DeleteMapping("/{id}")
@@ -59,7 +61,6 @@ public class ProdutoController {
 	}
 	
 	
-	//parei no bloco 6 iniciar bloco
 	
 	
 	
