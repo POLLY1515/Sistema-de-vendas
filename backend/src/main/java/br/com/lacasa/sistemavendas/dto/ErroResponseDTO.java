@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter@AllArgsConstructor
+@Getter
+@AllArgsConstructor
 public class ErroResponseDTO {
 	
 	private LocalDateTime dataHora;
