@@ -32,6 +32,28 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
+    
+    @ExceptionHandler(RegraNegocioException.class)
+   public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(
+		   RegraNegocioException ex,
+		   HttpServletRequest request
+		   
+	) {
+    	
+    		ErroResponseDTO erro = new ErroResponseDTO(
+    				LocalDateTime.now(),
+    				HttpStatus.BAD_REQUEST.value(),
+    				"Bad Request",
+    				ex.getMessage(),
+    				request.getRequestURI(),
+    				null
+    				
+    	);			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+    	
+    	
+    	
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> tratarErroDeValidacao(
@@ -55,20 +77,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(resposta);
     }
 
-    @ExceptionHandler(RegraNegocioException.class)
-    public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(
-            RegraNegocioException ex,
-            HttpServletRequest request) {
-
-        ErroResponseDTO erro = new ErroResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                ex.getMessage(),
-                request.getRequestURI(),
-                null
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
-    }
 }

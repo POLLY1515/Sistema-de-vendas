@@ -9,6 +9,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ErroResponseDTO {
 	
+	public ErroResponseDTO(LocalDateTime now, int value, String string, String message, String requestURI,
+			Object object) {
+		// TODO Auto-generated constructor stub
+	}
 	private LocalDateTime dataHora;
 	private int status;
 	private String erro;
