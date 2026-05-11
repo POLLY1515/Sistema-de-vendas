@@ -1,10 +1,13 @@
 package br.com.lacasa.sistemavendas.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import br.com.lacasa.sistemavendas.dto.ClienteRequestDTO;
 import br.com.lacasa.sistemavendas.dto.ClienteResponseDTO;
 import br.com.lacasa.sistemavendas.entity.Cliente;
+import br.com.lacasa.sistemavendas.exception.RecursoNaoEncontradoException;
 import br.com.lacasa.sistemavendas.exception.RegraNegocioException;
 import br.com.lacasa.sistemavendas.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,26 @@ public class ClienteService {
 		
 		Cliente clienteSalvo = clienteRepository.save(cliente);
 		return converteParaResponseDTO(clienteSalvo);
+	}
+	
+	
+	public List<ClienteResponseDTO> listarTodos(){
+		return clienteRepository.findAll()
+				.stream()
+				.map(this:: converteParaResponseDTO)
+				.toList();
+	}
+	
+	public ClienteResponseDTO buscarPorId (Long id) {
+		Cliente cliente = buscarClienetOuFalhar(id);
+		return converteParaResponseDTO(cliente);
+	}
+	
+	private Cliente buscarClienetOuFalhar(Long id) {
+		return clienteRepository.findById(id)
+				.orElseThrow(() -> new RecursoNaoEncontradoException(
+						"Cliente com ID " + id + " não encontrado!"));
+		
 	}
 	
 	
@@ -52,5 +75,6 @@ public class ClienteService {
 		});
 		
 	}
+	
 
 }
