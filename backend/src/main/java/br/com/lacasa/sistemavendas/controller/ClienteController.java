@@ -44,7 +44,7 @@ public class ClienteController {
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<ClienteResponseDTO>atualizar(@PathVariable Long id, @Valid ClienteRequestDTO request){
+	public ResponseEntity<ClienteResponseDTO>atualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequestDTO request){
 		ClienteResponseDTO cliente = clienteService.atualizar(id, request);
 		return ResponseEntity.ok(cliente);
 	}
