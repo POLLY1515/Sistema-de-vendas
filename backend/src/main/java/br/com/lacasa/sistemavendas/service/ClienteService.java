@@ -40,11 +40,37 @@ public class ClienteService {
 	}
 	
 	public ClienteResponseDTO buscarPorId (Long id) {
-		Cliente cliente = buscarClienetOuFalhar(id);
+		Cliente cliente = buscarClienteOuFalhar(id);
 		return converteParaResponseDTO(cliente);
 	}
 	
-	private Cliente buscarClienetOuFalhar(Long id) {
+	public ClienteResponseDTO atualizar (Long id, ClienteRequestDTO request) {
+		Cliente cliente = buscarClienteOuFalhar(id);
+		
+		validarEmailECpf(request.getEmail(), request.getCpf(), id);
+		
+		cliente.setNome(request.getNome());
+		cliente.setEmail(request.getEmail());
+		cliente.setTelefone(request.getTelefone());
+		cliente.setCpf(request.getCpf());
+		
+		Cliente clienteAtualizado = clienteRepository.save(cliente);
+		
+		return converteParaResponseDTO(clienteAtualizado);
+		
+		
+	}
+	
+	public void remover(Long id) {
+		
+		Cliente cliente = buscarClienteOuFalhar(id);
+		clienteRepository.delete(cliente);
+		
+				
+	
+	}
+	
+	private Cliente buscarClienteOuFalhar(Long id) {
 		return clienteRepository.findById(id)
 				.orElseThrow(() -> new RecursoNaoEncontradoException(
 						"Cliente com ID " + id + " não encontrado!"));
