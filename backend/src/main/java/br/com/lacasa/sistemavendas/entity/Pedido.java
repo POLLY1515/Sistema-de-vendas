@@ -128,11 +128,10 @@ public class Pedido {
 	}
 	
 	public void calcularValorTotal() {
-		this.valorTotal = itens.stream()
-				.map(ItemPedido::getSubtotal)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	    this.valorTotal = itens.stream()              // percorre todos os itens
+	            .map(ItemPedido::getSubtotal)        // pega o subtotal de cada item
+	            .reduce(BigDecimal.ZERO, BigDecimal::add); // soma todos os subtotais
 	}
-	
 	
 	
 }
