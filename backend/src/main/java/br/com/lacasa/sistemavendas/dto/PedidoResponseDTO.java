@@ -1,5 +1,24 @@
 package br.com.lacasa.sistemavendas.dto;
 
-public class PedidoResponseDTO {
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import br.com.lacasa.sistemavendas.entity.StatusPedido;
+
+public record PedidoResponseDTO(
+		
+		Long id,
+		Long clienetId,
+		String nomeCliente,
+		LocalDateTime dataPedido,
+		StatusPedido status,
+		BigDecimal valorTotal,
+		List<ItemPedidoResponseDTO>itens
+
+		
+		
+		) {
+	
 
 }
