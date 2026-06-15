@@ -44,6 +44,7 @@ public class ClienteService {
 		return converteParaResponseDTO(cliente);
 	}
 	
+	
 	public ClienteResponseDTO atualizar (Long id, ClienteRequestDTO request) {
 		Cliente cliente = buscarClienteOuFalhar(id);
 		
@@ -98,9 +99,24 @@ public class ClienteService {
 			
 			}
 			
+			if(!mesmoCliente && cliente.getCpf().equals(cpf)) {
+				throw new RegraNegocioException("Ja existe cliente cadastrado com esse email");
+			}
+			
 		});
+	}	
 		
-	}
+		private void validarNovoCliente(ClienteRequestDTO request) {
+			if(clienteRepository.existsByEmail(request.getEmail())) {
+				throw new RegraNegocioException("Já existe cliente cadastrado com esse email");
+			}
+			
+			if(clienteRepository.existsByCpf(request.getCpf())) {
+				throw new RegraNegocioException("Já exixte cliente cadastrado com este Cpf");
+			}
+		}
+		
+	
 	
 
 }
