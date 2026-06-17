@@ -68,6 +68,14 @@ public class PedidoService {
 	}
 	
 	
+	public List<PedidoResponseDTO> listarTodos(){
+		return pedidoRepository.findAll()
+				.stream()
+				.map(this:: transformarEmResponse)
+				.toList();
+	}
+	
+	
 	private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
 		
 		List<ItemPedidoResponseDTO> itens = pedido.getItens()
