@@ -61,6 +61,13 @@ public class PedidoService {
 	}
 	
 	
+	public PedidoResponseDTO buscarPorId(Long id) {
+		Pedido pedido = pedidoRepository.findById(id).orElseThrow(() -> new RuntimeException("Registro não encontrado"));
+		
+		return transformarEmResponse(pedido);
+	}
+	
+	
 	private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
 		
 		List<ItemPedidoResponseDTO> itens = pedido.getItens()
@@ -84,5 +91,4 @@ public class PedidoService {
 				);
 	}
 
-	//parei inicio pagina 109
 }

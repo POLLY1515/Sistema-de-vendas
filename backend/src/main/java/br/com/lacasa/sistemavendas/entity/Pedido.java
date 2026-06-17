@@ -26,11 +26,12 @@ public class Pedido {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@ManyToOne(optional = false)/*muitos pedidos podem pertencer a um cliente. O pedido não pode existir
-	sem cliente.*/
-	
+	//Muitos pedidos podem pertencer a um cliente.
+	//O pedido não pode existir sem cliente.
+	@ManyToOne(optional = false)		
 	@JoinColumn(name = "cliente_id")
 	private Cliente cliente;
+								
 	
 	/*Diz que um pedido pode ter vários itens. O mappedBy indica que o dono da relação
 	está no campo pedido dentro de ItemPedido.*/
