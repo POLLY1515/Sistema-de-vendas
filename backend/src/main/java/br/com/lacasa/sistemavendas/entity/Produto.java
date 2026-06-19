@@ -2,6 +2,7 @@ package br.com.lacasa.sistemavendas.entity;
 
 import java.math.BigDecimal;
 
+import br.com.lacasa.sistemavendas.exception.EstoqueInsuficienteException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -20,12 +20,12 @@ public class ProdutoService {
 	private final ProdutoRepository produtoRepository;
 
 	
-	public ProdutoResponseDTO cadastrar(ProdutoRequestDTO dto) {
+	public ProdutoResponseDTO cadastrar(ProdutoRequestDTO request) {
 		Produto	produto = new Produto();
 		
-		produto.setNome(dto.getNome());
-		produto.setPreco(dto.getPreco());
-		produto.setQuantidade(dto.getQuantidade());
+		produto.setNome(request.getNome());
+		produto.setPreco(request.getPreco());
+		produto.setQuantidadeEstoque(request.getQuantidadeEstoque());
 		
 		Produto produtoSalvo = produtoRepository.save(produto);
 		return converterParaResponseDTO(produtoSalvo);
@@ -53,7 +53,7 @@ public class ProdutoService {
 		
 		produtoExistente.setNome(dto.getNome());
 		produtoExistente.setPreco(dto.getPreco());
-		produtoExistente.setQuantidade(dto.getQuantidade());
+		produtoExistente.setQuantidade(dto.getQuantidadeEstoque());
 		
 		Produto produtoAtualizado = produtoRepository.save(produtoExistente);
 		return converterParaResponseDTO(produtoAtualizado);
@@ -78,7 +78,7 @@ public class ProdutoService {
 				produto.getId(),
 				produto.getNome(),
 				produto.getPreco(),
-				produto.getQuantidade()
+				produto.getQuantidadeEstoque()
 				
 				);
 	}
