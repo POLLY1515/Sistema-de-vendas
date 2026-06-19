@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,5 +41,17 @@ public class PedidoController {
 	@GetMapping
 	public ResponseEntity<List<PedidoResponseDTO>>listarTodos(){
 		return ResponseEntity.ok(pedidoService.listarTodos());
+	}
+	
+	@PatchMapping("/{id}/cancelar")
+	public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable long id){
+		PedidoResponseDTO response = pedidoService.cancelarPedido(id);
+		return ResponseEntity.ok(response);
+	}
+	
+	@PatchMapping("/{id}/finalizar")
+	public ResponseEntity<PedidoResponseDTO> finalizar(@PathVariable long id){
+		PedidoResponseDTO response = pedidoService.finalizarPedido(id);
+		return ResponseEntity.ok(response);
 	}
 }
