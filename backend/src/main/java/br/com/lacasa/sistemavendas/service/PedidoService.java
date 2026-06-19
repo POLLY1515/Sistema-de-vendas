@@ -12,9 +12,11 @@ import br.com.lacasa.sistemavendas.entity.Cliente;
 import br.com.lacasa.sistemavendas.entity.ItemPedido;
 import br.com.lacasa.sistemavendas.entity.Pedido;
 import br.com.lacasa.sistemavendas.entity.Produto;
+import br.com.lacasa.sistemavendas.entity.StatusPedido;
 import br.com.lacasa.sistemavendas.repository.ClienteRepository;
 import br.com.lacasa.sistemavendas.repository.PedidoRepository;
 import br.com.lacasa.sistemavendas.repository.ProdutoRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class PedidoService {
@@ -32,6 +34,7 @@ public class PedidoService {
 		this.produtoRepository = produtoRepository;
 	}
 	
+	@Transactional
 	public PedidoResponseDTO criarPedido (PedidoRequestDTO request) {
 		Cliente cliente = clienteRepository.findById(request.clienteId())
 				.orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
@@ -42,7 +45,8 @@ public class PedidoService {
 		for(ItemPedidoRequestDTO itemRequest : request.itens()) {
 			Produto produto = produtoRepository.findById(itemRequest.produtoID())
 					.orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-							
+			produto.baixarEstoque(itemRequest.quantidade());
+			
 			ItemPedido item = new ItemPedido();
 			item.setProduto(produto);
 			item.setQuantidade(itemRequest.quantidade());
@@ -58,6 +62,24 @@ public class PedidoService {
 		
 		return transformarEmResponse(pedidoSalvo);
 		
+	}
+	
+	@Transactional
+	public PedidoResponseDTO cancelarPedido(Long id) {
+		Pedido pedido = pedidoRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Pedido não encontrado!"));
+		if(pedido.getStatus()== StatusPedido.CANCELADO) {
+			throw new RuntimeException("Este pedido já foi cancelado!");
+		}
+		for(ItemPedido item : pedido.getItens()) {
+			Produto produto = item.getProduto();
+			produto.devolverEstoque(item.getQuantidade());
+		}
+		
+		pedido.setStatus(StatusPedido.CANCELADO);
+		Pedido pedidoSalvo = pedidoRepository.save(pedido);
+		
+		return transformarEmResponse(pedidoSalvo);
 	}
 	
 	
