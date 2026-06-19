@@ -82,6 +82,26 @@ public class PedidoService {
 		return transformarEmResponse(pedidoSalvo);
 	}
 	
+	@Transactional
+	public PedidoResponseDTO finalizarPedido(Long id) {
+		
+		Pedido pedido = pedidoRepository.findById(id)
+				.orElseThrow(()-> new RuntimeException("Pedido não encontrado"));
+		if(pedido.getStatus()== StatusPedido.CANCELADO) {
+			throw new RuntimeException("Não é possível finalizar um pedido cancelado!");
+
+		}
+		if(pedido.getStatus()== StatusPedido.FINALIZADO) {
+			throw new RuntimeException("Este pedido já está finalizado!");
+		}
+		
+		pedido.setStatus(StatusPedido.FINALIZADO);
+		Pedido pedidoSalvo = pedidoRepository.save(pedido);
+		
+		return transformarEmResponse(pedidoSalvo);
+	}
+	
+	
 	
 	public PedidoResponseDTO buscarPorId(Long id) {
 		Pedido pedido = pedidoRepository.findById(id).orElseThrow(() -> new RuntimeException("Registro não encontrado"));
