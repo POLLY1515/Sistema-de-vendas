@@ -36,4 +36,27 @@ public class Produto {
 	
 	@Column(nullable = false)
 	private Integer quantidade;
+	
+	@Column(nullable = false)
+	private int quantidadeEstoque = 0;
+	
+	
+	
+	
+	public void baixarEstoque(Integer quantidadeVendida) {
+		if(quantidadeVendida > this.quantidadeEstoque) {
+			throw new EstoqueInsuficienteException("Estoque insuficiente para o produto" + this.nome);
+		}
+		this.quantidadeEstoque = this.quantidadeEstoque - quantidadeVendida;
+	}
+	
+	
+	public void devolverEstoque(Integer quantidadeDevolvida) {
+		this.quantidadeEstoque = this.quantidadeEstoque + quantidadeDevolvida;
+	}
+	
+	
+	
+	
+	
 }
