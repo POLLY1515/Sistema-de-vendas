@@ -25,4 +25,3 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 				LocalDateTime fim
 				);
 }
-//pagina 142
