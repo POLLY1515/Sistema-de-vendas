@@ -53,7 +53,7 @@ public class ProdutoService {
 		
 		produtoExistente.setNome(dto.getNome());
 		produtoExistente.setPreco(dto.getPreco());
-		produtoExistente.setQuantidade(dto.getQuantidadeEstoque());
+		produtoExistente.setQuantidadeEstoque(dto.getQuantidadeEstoque());
 		
 		Produto produtoAtualizado = produtoRepository.save(produtoExistente);
 		return converterParaResponseDTO(produtoAtualizado);

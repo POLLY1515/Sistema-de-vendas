@@ -36,10 +36,7 @@ public class Produto {
 	private BigDecimal preco;
 	
 	@Column(nullable = false)
-	private Integer quantidade;
-	
-	@Column(nullable = false)
-	private int quantidadeEstoque = 0;
+	private Integer quantidadeEstoque = 0;
 	
 	
 	
