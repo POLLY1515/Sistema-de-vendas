@@ -13,6 +13,7 @@ public record PedidoResponseDTO(
 		String nomeCliente,
 		LocalDateTime dataPedido,
 		StatusPedido status,
+		LocalDateTime dataCriacao,
 		BigDecimal valorTotal,
 		List<ItemPedidoResponseDTO>itens
 

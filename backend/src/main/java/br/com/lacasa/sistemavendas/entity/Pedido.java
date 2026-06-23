@@ -17,7 +17,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "pedidos")
 public class Pedido {
@@ -45,6 +49,8 @@ public class Pedido {
 	@Column(nullable = false)
 	private StatusPedido status = StatusPedido.ABERTO;
 	
+	@Column(nullable = false)
+	private LocalDateTime dataCriacao = LocalDateTime.now();
 	
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal valorTotal = BigDecimal.ZERO;
