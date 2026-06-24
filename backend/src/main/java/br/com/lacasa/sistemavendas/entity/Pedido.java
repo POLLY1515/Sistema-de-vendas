@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,8 +51,13 @@ public class Pedido {
 	@Column(nullable = false)
 	private StatusPedido status = StatusPedido.ABERTO;
 	
-	@Column(nullable = false)
-	private LocalDateTime dataCriacao = LocalDateTime.now();
+	@CreationTimestamp
+	@Column(
+	    name = "data_criacao",
+	    nullable = false,
+	    updatable = false
+	)
+	private LocalDateTime dataCriacao;
 	
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal valorTotal = BigDecimal.ZERO;

@@ -35,33 +35,37 @@ public class PedidoService {
 	}
 	
 	@Transactional
-	public PedidoResponseDTO criarPedido (PedidoRequestDTO request) {
-		Cliente cliente = clienteRepository.findById(request.clienteId())
-				.orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-		
-		Pedido pedido = new Pedido();
-		pedido.setCliente(cliente);
-		
-		for(ItemPedidoRequestDTO itemRequest : request.itens()) {
-			Produto produto = produtoRepository.findById(itemRequest.produtoID())
-					.orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-			produto.baixarEstoque(itemRequest.quantidade());
-			
-			ItemPedido item = new ItemPedido();
-			item.setProduto(produto);
-			item.setQuantidade(itemRequest.quantidade());
-			item.setPrecoUnitario(produto.getPreco());
-			item.calcularSubtotal();
-			
-			pedido.adicionarItem(item);
-			
-		} 
-		
-		pedido.calcularValorTotal();
-		Pedido pedidoSalvo = pedidoRepository.save(pedido);
-		
-		return transformarEmResponse(pedidoSalvo);
-		
+	public PedidoResponseDTO criarPedido(PedidoRequestDTO request) {
+
+	    Cliente cliente = clienteRepository.findById(request.clienteId())
+	            .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+	    Pedido pedido = new Pedido();
+	    pedido.setCliente(cliente);
+
+	    for (ItemPedidoRequestDTO itemRequest : request.itens()) {
+
+	        Produto produto = produtoRepository.findById(itemRequest.produtoID())
+	                .orElseThrow(() -> new RuntimeException(
+	                        "Produto não encontrado: " + itemRequest.produtoID()
+	                ));
+
+	        produto.baixarEstoque(itemRequest.quantidade());
+
+	        ItemPedido item = new ItemPedido();
+	        item.setProduto(produto);
+	        item.setQuantidade(itemRequest.quantidade());
+	        item.setPrecoUnitario(produto.getPreco());
+	        item.calcularSubtotal();
+
+	        pedido.adicionarItem(item);
+	    }
+
+	    pedido.calcularValorTotal();
+
+	    Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+	    return transformarEmResponse(pedidoSalvo);
 	}
 	
 	@Transactional
@@ -118,27 +122,45 @@ public class PedidoService {
 	}
 	
 	
-	private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
-		
-		List<ItemPedidoResponseDTO> itens = pedido.getItens()
-				.stream()
-				.map(item -> new ItemPedidoResponseDTO(
-						item.getProduto().getId(),
-						item.getProduto().getNome(),
-						item.getQuantidade(),
-						item.getPrecoUnitario(),
-						item.getSubtotal()
-						)).toList();
-		
-		return new PedidoResponseDTO(
-				pedido.getId(),
-				pedido.getCliente().getId(),
-				pedido.getCliente().getNome(),
-				pedido.getDataPedido(),
-				pedido.getStatus(),
-				pedido.getValorTotal(),
-				itens
-				);
-	}
 
+	public List<PedidoResponseDTO> listarPorStatus(StatusPedido status){
+		return pedidoRepository.findByStatus(status)
+				
+				.stream()
+				.map(this:: transformarEmResponse)
+				.toList();
+	}
+	
+	
+	public List<PedidoResponseDTO> listarPorCliente(Long clienteId){
+		return pedidoRepository.findByClienteId(clienteId)	
+				.stream()
+				.map(this:: transformarEmResponse)
+				.toList();
+	}
+	
+	
+	private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
+
+	    List<ItemPedidoResponseDTO> itens = pedido.getItens()
+	            .stream()
+	            .map(item -> new ItemPedidoResponseDTO(
+	                    item.getProduto().getId(),
+	                    item.getProduto().getNome(),
+	                    item.getQuantidade(),
+	                    item.getPrecoUnitario(),
+	                    item.getSubtotal()
+	            ))
+	            .toList();
+
+	    return new PedidoResponseDTO(
+	            pedido.getId(),
+	            pedido.getCliente().getId(),
+	            pedido.getCliente().getNome(),
+	            pedido.getDataCriacao(),
+	            pedido.getStatus(),
+	            null, pedido.getValorTotal(),
+	            itens
+	    );
+	}
 }
