@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.lacasa.sistemavendas.dto.PedidoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.PedidoResponseDTO;
+import br.com.lacasa.sistemavendas.entity.StatusPedido;
 import br.com.lacasa.sistemavendas.service.PedidoService;
 import jakarta.validation.Valid;
 
@@ -42,6 +43,20 @@ public class PedidoController {
 	public ResponseEntity<List<PedidoResponseDTO>>listarTodos(){
 		return ResponseEntity.ok(pedidoService.listarTodos());
 	}
+	
+	@GetMapping("/status/{status}")
+	public ResponseEntity<List<PedidoResponseDTO>> listarPorStatus(@PathVariable StatusPedido status){
+		return ResponseEntity.ok(pedidoService.listarPorStatus(status));
+		
+	}
+	
+	
+	@GetMapping("/cliente/{clienteId}")
+	public ResponseEntity<List<PedidoResponseDTO>> listarPorCliente(@PathVariable Long clienteId){
+		return ResponseEntity.ok(pedidoService.listarPorCliente(clienteId));
+		
+	}
+		
 	
 	@PatchMapping("/{id}/cancelar")
 	public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable long id){
