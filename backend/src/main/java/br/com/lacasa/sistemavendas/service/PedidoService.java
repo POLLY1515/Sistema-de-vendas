@@ -1,5 +1,6 @@
 package br.com.lacasa.sistemavendas.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -134,6 +135,22 @@ public class PedidoService {
 	
 	public List<PedidoResponseDTO> listarPorCliente(Long clienteId){
 		return pedidoRepository.findByClienteId(clienteId)	
+				.stream()
+				.map(this:: transformarEmResponse)
+				.toList();
+	}
+	
+	
+	public List<PedidoResponseDTO> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim){
+		return pedidoRepository.findByDataCriacaoBetween(inicio, fim)
+				.stream()
+				.map(this:: transformarEmResponse)
+				.toList();
+	}
+	
+	
+	public List<PedidoResponseDTO> listarPorStatusEPeriodo(StatusPedido status,LocalDateTime inicio, LocalDateTime fim){
+		return pedidoRepository.findByStatusAndDataCriacaoBetween(status, inicio, fim)
 				.stream()
 				.map(this:: transformarEmResponse)
 				.toList();
