@@ -1,5 +1,6 @@
 package br.com.lacasa.sistemavendas.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import br.com.lacasa.sistemavendas.dto.ItemPedidoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.ItemPedidoResponseDTO;
 import br.com.lacasa.sistemavendas.dto.PedidoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.PedidoResponseDTO;
+import br.com.lacasa.sistemavendas.dto.ResumoVendasDTO;
 import br.com.lacasa.sistemavendas.entity.Cliente;
 import br.com.lacasa.sistemavendas.entity.ItemPedido;
 import br.com.lacasa.sistemavendas.entity.Pedido;
@@ -154,6 +156,19 @@ public class PedidoService {
 				.stream()
 				.map(this:: transformarEmResponse)
 				.toList();
+	}
+	
+	public ResumoVendasDTO gerarResumoDeVendasFinalizadas() {
+		List<Pedido> pedidosFinalizados = pedidoRepository.findByStatus(StatusPedido.FINALIZADO);
+		
+		BigDecimal totalVendido = pedidosFinalizados.stream()
+				.map(Pedido::getValorTotal)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		Long quantidadePedidos = (long) pedidosFinalizados.size();
+		
+		return new ResumoVendasDTO(quantidadePedidos,totalVendido
+				);
 	}
 	
 	
