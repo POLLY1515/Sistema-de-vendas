@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,12 +50,7 @@ public class Pedido {
 	@Column(nullable = false)
 	private StatusPedido status = StatusPedido.ABERTO;
 	
-	@CreationTimestamp
-	@Column(
-	    name = "data_criacao",
-	    nullable = false,
-	    updatable = false
-	)
+	@Column(name = "data_criacao", nullable = false, updatable = false)
 	private LocalDateTime dataCriacao;
 	
 	@Column(nullable = false, precision = 10, scale = 2)
@@ -64,76 +58,13 @@ public class Pedido {
 	
 
 
-	public Long getId() {
-		return id;
+	
+	@PrePersist
+	public void preencherDataCriacao() {
+	    if (this.dataCriacao == null) {
+	        this.dataCriacao = LocalDateTime.now();
+	    }
 	}
-
-
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-
-
-	public Cliente getCliente() {
-		return cliente;
-	}
-
-
-
-	public void setCliente(Cliente cliente) {
-		this.cliente = cliente;
-	}
-
-
-
-	public List<ItemPedido> getItens() {
-		return itens;
-	}
-
-
-
-	public void setItens(List<ItemPedido> itens) {
-		this.itens = itens;
-	}
-
-
-
-	public LocalDateTime getDataPedido() {
-		return dataPedido;
-	}
-
-
-
-	public void setDataPedido(LocalDateTime dataPedido) {
-		this.dataPedido = dataPedido;
-	}
-
-
-
-	public StatusPedido getStatus() {
-		return status;
-	}
-
-
-
-	public void setStatus(StatusPedido status) {
-		this.status = status;
-	}
-
-
-
-	public BigDecimal getValorTotal() {
-		return valorTotal;
-	}
-
-
-
-	public void setValorTotal(BigDecimal valorTotal) {
-		this.valorTotal = valorTotal;
-	}
-
 
 
 	public void adicionarItem(ItemPedido item) {
