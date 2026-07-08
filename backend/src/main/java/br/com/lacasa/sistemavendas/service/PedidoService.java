@@ -48,9 +48,9 @@ public class PedidoService {
 
 	    for (ItemPedidoRequestDTO itemRequest : request.itens()) {
 
-	        Produto produto = produtoRepository.findById(itemRequest.produtoID())
+	        Produto produto = produtoRepository.findById(itemRequest.produtoId())
 	                .orElseThrow(() -> new RuntimeException(
-	                        "Produto não encontrado: " + itemRequest.produtoID()
+	                        "Produto não encontrado: " + itemRequest.produtoId()
 	                ));
 
 	        produto.baixarEstoque(itemRequest.quantidade());
@@ -191,7 +191,8 @@ public class PedidoService {
 	            pedido.getCliente().getNome(),
 	            pedido.getDataCriacao(),
 	            pedido.getStatus(),
-	            null, pedido.getValorTotal(),
+	            pedido.getDataCriacao(),
+	            pedido.getValorTotal(),
 	            itens
 	    );
 	}
