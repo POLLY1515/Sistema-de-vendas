@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.lacasa.sistemavendas.dto.PedidoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.PedidoResponseDTO;
+import br.com.lacasa.sistemavendas.dto.ResumoVendasDTO;
 import br.com.lacasa.sistemavendas.entity.StatusPedido;
 import br.com.lacasa.sistemavendas.service.PedidoService;
 import jakarta.validation.Valid;
@@ -85,6 +86,11 @@ public class PedidoController {
 	}
 	
 		
+	@GetMapping("/resumo")
+	public ResponseEntity<ResumoVendasDTO> resumoVendas(){
+		ResumoVendasDTO resumo = pedidoService.gerarResumoDeVendasFinalizadas();
+		return ResponseEntity.ok(resumo);
+	}
 	
 	@PatchMapping("/{id}/cancelar")
 	public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable long id){
