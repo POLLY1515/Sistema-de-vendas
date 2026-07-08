@@ -69,6 +69,21 @@ public class PedidoController {
 				return ResponseEntity.ok(pedidoService.listarPorPeriodo(inicio, fim)
 				);
 	}
+	
+	@GetMapping("/relatorio")
+	public ResponseEntity<List<PedidoResponseDTO>>listarPorStatusEPeriodo(
+			@RequestParam StatusPedido status,
+			@RequestParam 
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+			
+			@RequestParam
+			@DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME)
+			LocalDateTime fim
+			){
+				return ResponseEntity.ok(pedidoService.listarPorStatusEPeriodo(status,inicio, fim)
+				);
+	}
+	
 		
 	
 	@PatchMapping("/{id}/cancelar")
