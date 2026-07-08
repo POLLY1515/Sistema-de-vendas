@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record ItemPedidoRequestDTO(
 		
 		@NotNull(message = "O produto é obrigatorio")
-		Long produtoID,
+		Long produtoId,
 		
 		@NotNull(message = "A quantidade é obrigatoria")
 		@Min(value = 1, message = "A quantidade mínima é 1")
