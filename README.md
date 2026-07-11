@@ -29,6 +29,48 @@ O objetivo deste projeto é simular uma aplicação de vendas, permitindo estrut
 * Consulta de pedidos
 * Geração de resumo de dados
 
+* ## ▶️ Como executar o projeto
+
+### Pré-requisitos
+
+- Java 21
+- PostgreSQL
+- Git
+
+### Configuração
+
+1. Clone o repositório:
+
+```bash
+git clone https://github.com/POLLY1515/Sistema-de-vendas.git
+```
+
+2. Crie no PostgreSQL um banco chamado:
+
+```text
+sistema-vendas
+```
+
+3. Configure a variável `DB_PASSWORD` com a senha do seu PostgreSQL.
+
+4. Entre na pasta do back-end:
+
+```bash
+cd Sistema-de-vendas/backend
+```
+
+5. Execute o projeto no Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
+A aplicação será iniciada em:
+
+```text
+http://localhost:8080
+```
+
 
 ## 📚 Aprendizados
 
