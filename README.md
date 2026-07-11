@@ -16,11 +16,15 @@ O objetivo deste projeto é simular uma aplicação de vendas, permitindo estrut
 
 ## 📌 Funcionalidades
 
-- Estrutura back-end organizada
-- Separação de responsabilidades
-- Cadastro e controle de dados
-- Base para criação de APIs REST
-- Projeto voltado para prática de desenvolvimento back-end
+## ✅ Funcionalidades implementadas
+
+* Cadastro de produtos
+* Listagem e busca de produtos
+* Atualização de produtos
+* Exclusão de produtos
+* Consulta de pedidos
+* Geração de resumo de dados
+
 
 ## 📚 Aprendizados
 
