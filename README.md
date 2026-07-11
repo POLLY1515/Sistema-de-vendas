@@ -43,3 +43,7 @@ Durante o desenvolvimento deste projeto, foram praticados conceitos como:
 ## 👩‍💻 Desenvolvedora
 
 Projeto desenvolvido por Poliana Amarante.
+## 🚧 Status do projeto
+
+Em desenvolvimento. O back-end já possui operações de cadastro, consulta, atualização e exclusão de produtos, além da consulta de pedidos e geração de resumo.
+
