@@ -14,7 +14,6 @@ O objetivo deste projeto é simular uma aplicação de vendas, permitindo estrut
 - Banco de Dados
 - Git e GitHub
 
-## 📌 Funcionalidades
 
 ## ✅ Funcionalidades implementadas
 
