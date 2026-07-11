@@ -6,13 +6,18 @@ Sistema back-end desenvolvido em Java para gerenciamento de vendas, com foco em 
 
 O objetivo deste projeto é simular uma aplicação de vendas, permitindo estruturar funcionalidades comuns em sistemas comerciais, como cadastro, controle e processamento de informações.
 
+
 ## 🛠️ Tecnologias utilizadas
 
-- Java
-- Spring Boot
-- Maven
-- Banco de Dados
-- Git e GitHub
+* Java 21
+* Spring Boot
+* Spring Data JPA
+* PostgreSQL
+* Maven
+* Bean Validation
+* Lombok
+* Git e GitHub
+
 
 
 ## ✅ Funcionalidades implementadas
