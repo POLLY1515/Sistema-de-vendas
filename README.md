@@ -70,7 +70,36 @@ A aplicação será iniciada em:
 ```text
 http://localhost:8080
 ```
+## 📦 Endpoints de produtos
 
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/produtos` | Cadastra um produto |
+| GET | `/produtos` | Lista todos os produtos |
+| GET | `/produtos/{id}` | Busca um produto pelo ID |
+| PUT | `/produtos/{id}` | Atualiza um produto |
+| DELETE | `/produtos/{id}` | Exclui um produto |
+
+### Exemplo de requisição
+
+```json
+{
+  "nome": "Notebook",
+  "preco": 3500.00,
+  "quantidadeEstoque": 10
+}
+```
+
+### Exemplo de resposta
+
+```json
+{
+  "id": 1,
+  "nome": "Notebook",
+  "preco": 3500.00,
+  "quantidadeEstoque": 10
+}
+```
 
 ## 📚 Aprendizados
 
