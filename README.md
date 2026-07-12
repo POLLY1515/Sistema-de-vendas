@@ -100,6 +100,38 @@ http://localhost:8080
   "quantidadeEstoque": 10
 }
 ```
+## 👤 Endpoints de clientes
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/clientes` | Cadastra um cliente |
+| GET | `/clientes` | Lista todos os clientes |
+| GET | `/clientes/{id}` | Busca um cliente pelo ID |
+| PUT | `/clientes/{id}` | Atualiza um cliente |
+| DELETE | `/clientes/{id}` | Exclui um cliente |
+
+### Exemplo de requisição
+
+```json
+{
+  "nome": "Maria Silva",
+  "email": "maria@email.com",
+  "telefone": "11999999999",
+  "cpf": "12345678901"
+}
+```
+
+### Exemplo de resposta
+
+```json
+{
+  "id": 1,
+  "nome": "Maria Silva",
+  "email": "maria@email.com",
+  "telefone": "11999999999",
+  "cpf": "12345678901"
+}
+```
 
 ## 📚 Aprendizados
 
