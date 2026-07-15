@@ -2,10 +2,11 @@ package br.com.lacasa.sistemavendas.service;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import br.com.lacasa.sistemavendas.dto.PaginaResponseDTO;
 import br.com.lacasa.sistemavendas.dto.ProdutoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.ProdutoResponseDTO;
 import br.com.lacasa.sistemavendas.entity.Produto;
@@ -28,7 +29,7 @@ public class ProdutoService {
 		produto.setQuantidadeEstoque(request.getQuantidadeEstoque());
 		
 		Produto produtoSalvo = produtoRepository.save(produto);
-		return converterParaResponseDTO(produtoSalvo);
+		return converterParaResponse(produtoSalvo);
 		
 	}
 	
@@ -37,13 +38,32 @@ public class ProdutoService {
 	public List<ProdutoResponseDTO> listarTodos(){
 		return produtoRepository.findAll()
 				.stream()
-				.map(this:: converterParaResponseDTO)
+				.map(this:: converterParaResponse)
 				.toList();
+	}
+	
+	public PaginaResponseDTO<ProdutoResponseDTO> listarPaginado(Pageable pageable){
+		//Pageable vai guardar o numero da pagina, tamanho e ordenaçao se tiver
+		Page<Produto> pagina = produtoRepository.findAll(pageable);
+		
+		Page<ProdutoResponseDTO> paginaDTO = pagina.map(this::converterParaResponse);
+		
+		return montarPaginaResponse(paginaDTO);
+	}
+	
+	
+	public PaginaResponseDTO<ProdutoResponseDTO> buscarPorNome(String nome, Pageable pageable){
+		
+		Page<Produto> pagina = produtoRepository.findByNomeContainingIgnoreCase(nome, pageable);
+		
+		Page<ProdutoResponseDTO> paginaDTO = pagina.map(this::converterParaResponse);
+		
+		return montarPaginaResponse(paginaDTO);
 	}
 	
 	public ProdutoResponseDTO buscarPorId(Long id) {
 		Produto produto = buscarEntidadePorId(id);
-		return converterParaResponseDTO(produto);
+		return converterParaResponse(produto);
 						
 	}
 	
@@ -56,7 +76,7 @@ public class ProdutoService {
 		produtoExistente.setQuantidadeEstoque(dto.getQuantidadeEstoque());
 		
 		Produto produtoAtualizado = produtoRepository.save(produtoExistente);
-		return converterParaResponseDTO(produtoAtualizado);
+		return converterParaResponse(produtoAtualizado);
 		
 	}
 	
@@ -73,7 +93,22 @@ public class ProdutoService {
 		
 	}
 	
-	private ProdutoResponseDTO converterParaResponseDTO(Produto produto) {
+	private PaginaResponseDTO<ProdutoResponseDTO> montarPaginaResponse(Page<ProdutoResponseDTO> pagina){
+		
+		return new PaginaResponseDTO<>(
+				pagina.getContent(),
+				pagina.getNumber(),
+				pagina.getSize(),
+				pagina.getTotalElements(),
+				pagina.getTotalPages(),
+				pagina.isFirst(),
+				pagina.isLast()
+				
+				);
+				
+	}
+	
+	private ProdutoResponseDTO converterParaResponse(Produto produto) {
 		return new ProdutoResponseDTO(
 				produto.getId(),
 				produto.getNome(),
