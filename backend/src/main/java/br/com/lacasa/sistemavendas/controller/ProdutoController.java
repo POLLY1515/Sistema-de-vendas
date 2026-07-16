@@ -64,6 +64,8 @@ public class ProdutoController {
 		return ResponseEntity.ok(produto);
 	}
 
+	
+	@GetMapping("/buscar")
 	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(@RequestParam String nome,
 			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
 			@RequestParam(defaultValue = "nome") String ordenarPor, @RequestParam(defaultValue = "asc") String direcao
