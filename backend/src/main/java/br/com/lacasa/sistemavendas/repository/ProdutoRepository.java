@@ -8,7 +8,7 @@ import br.com.lacasa.sistemavendas.entity.Produto;
 
 public interface ProdutoRepository  extends JpaRepository<Produto, Long>{
 
-	boolean existsBynomeIgnoreCase(String nome);
+	boolean existsByNomeIgnoreCase(String nome);
 	
 	Page<Produto> findByNomeContainingIgnoreCase(
 			String nome,
