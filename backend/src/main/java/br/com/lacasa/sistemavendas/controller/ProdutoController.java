@@ -44,6 +44,7 @@ public class ProdutoController {
 
 	}
 
+	@GetMapping("/paginado")
 	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> listarPaginado(
 			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
 			@RequestParam(defaultValue = "nome") String ordenarPor, @RequestParam(defaultValue = "asc") String direcao
