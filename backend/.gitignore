@@ -25,10 +25,22 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
+
 build/
+
 !**/src/main/**/build/
 !**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
-.metadata/
+
+### Logs ###
+*.log
+
+### Environment ###
+.env
+.env.*
+
+### Sistema Operacional ###
+.DS_Store
+Thumbs.db
