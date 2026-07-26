@@ -1,4 +1,4 @@
-# Sistema de Vendas
+# # Sistema de Vendas API
 
 Sistema back-end desenvolvido em Java para gerenciamento de vendas, com foco em organização de código, regras de negócio e manipulação de dados.
 
@@ -18,7 +18,26 @@ O objetivo deste projeto é simular uma aplicação de vendas, permitindo estrut
 * Lombok
 * Git e GitHub
 
+## 🏗️ Arquitetura
 
+O projeto segue uma arquitetura em camadas, separando responsabilidades entre os componentes da aplicação.
+
+
+Controller
+↓
+Service
+↓
+Repository
+↓
+Database
+
+
+Responsabilidades:
+
+- **Controller:** responsável por receber as requisições HTTP e retornar as respostas da API.
+- **Service:** concentra as regras de negócio da aplicação.
+- **Repository:** realiza o acesso aos dados utilizando Spring Data JPA.
+- **Entity:** representa os dados persistidos no banco de dados.
 
 ## ✅ Funcionalidades implementadas
 
@@ -148,5 +167,20 @@ Durante o desenvolvimento deste projeto, foram praticados conceitos como:
 Projeto desenvolvido por Poliana Amarante.
 ## 🚧 Status do projeto
 
+Projeto em desenvolvimento contínuo.
+
+Atualmente possui:
+
+- Cadastro, consulta, atualização e exclusão de produtos;
+- Cadastro e gerenciamento de clientes;
+- Persistência utilizando PostgreSQL;
+- Estrutura backend organizada com Spring Boot.
+
+Próximas evoluções:
+
+- Testes automatizados;
+- Documentação Swagger/OpenAPI;
+- Docker;
+- Migrations com Flyway.
 Em desenvolvimento. O back-end já possui operações de cadastro, consulta, atualização e exclusão de produtos, além da consulta de pedidos e geração de resumo.
 
