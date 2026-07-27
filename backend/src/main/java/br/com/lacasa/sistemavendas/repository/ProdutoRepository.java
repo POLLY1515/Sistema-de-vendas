@@ -6,13 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.com.lacasa.sistemavendas.entity.Produto;
 
-public interface ProdutoRepository  extends JpaRepository<Produto, Long>{
+public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
-	boolean existsByNomeIgnoreCase(String nome);
-	
-	Page<Produto> findByNomeContainingIgnoreCase(
-			String nome,
-			Pageable pageable
-			
-			);
+    boolean existsByNomeIgnoreCase(String nome);
+
+    boolean existsByNomeIgnoreCaseAndIdNot(String nome, Long id);
+
+    Page<Produto> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }
