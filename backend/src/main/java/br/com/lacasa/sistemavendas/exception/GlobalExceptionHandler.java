@@ -19,62 +19,53 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ResponseEntity<ErroResponseDTO> tratarRecursoNaoEncontrado(
             RecursoNaoEncontradoException ex,
-            HttpServletRequest request) {
-
-        ErroResponseDTO erro = new ErroResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getRequestURI()
-                
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+            HttpServletRequest request
+    ) {
+        return criarResposta(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
-    
-    @ExceptionHandler(RegraNegocioException.class)
-   public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(
-		   RegraNegocioException ex,
-		   HttpServletRequest request
-		   
-	) {
-    	
-    		ErroResponseDTO erro = new ErroResponseDTO(
-    				LocalDateTime.now(),
-    				HttpStatus.BAD_REQUEST.value(),
-    				"Bad Request",
-    				ex.getMessage(),
-    				request.getRequestURI()
-    				
-    				
-    	);			
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
-    	
-    	
-    	
+
+    @ExceptionHandler({RegraNegocioException.class, EstoqueInsuficienteException.class})
+    public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(
+            RuntimeException ex,
+            HttpServletRequest request
+    ) {
+        return criarResposta(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> tratarErroDeValidacao(
             MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
-
+            HttpServletRequest request
+    ) {
         Map<String, String> campos = new HashMap<>();
-
-        ex.getBindingResult().getFieldErrors().forEach(erro -> {
-            campos.put(erro.getField(), erro.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach(erro ->
+                campos.put(erro.getField(), erro.getDefaultMessage())
+        );
 
         Map<String, Object> resposta = new HashMap<>();
         resposta.put("dataHora", LocalDateTime.now());
         resposta.put("status", HttpStatus.BAD_REQUEST.value());
         resposta.put("erro", "Bad Request");
-        resposta.put("mensagem", "Existem campos inválidos");
+        resposta.put("mensagem", "Existem campos inválidos.");
         resposta.put("caminho", request.getRequestURI());
         resposta.put("campos", campos);
 
         return ResponseEntity.badRequest().body(resposta);
     }
 
-}//parei pagina 131
+    private ResponseEntity<ErroResponseDTO> criarResposta(
+            HttpStatus status,
+            String mensagem,
+            HttpServletRequest request
+    ) {
+        ErroResponseDTO erro = new ErroResponseDTO(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                mensagem,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(status).body(erro);
+    }
+}
