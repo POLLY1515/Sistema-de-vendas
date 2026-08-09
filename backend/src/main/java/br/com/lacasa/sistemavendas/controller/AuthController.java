@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.lacasa.sistemavendas.dto.LoginResponseDTO;
 import br.com.lacasa.sistemavendas.dto.UsuarioCadastroRequestDTO;
 import br.com.lacasa.sistemavendas.dto.UsuarioLoginRequestDTO;
 import br.com.lacasa.sistemavendas.dto.UsuarioResponseDTO;
-import br.com.lacasa.sistemavendas.dto.UsuarioResponseDTO.LoginResponseDTO;
 import br.com.lacasa.sistemavendas.service.AuthService;
 import jakarta.validation.Valid;
 
