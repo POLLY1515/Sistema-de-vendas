@@ -57,7 +57,6 @@ public class AuthService {
 		String token = jwtService.gerarToken(usuario);
 
 		return new LoginResponseDTO(token,"Bearer", transformarEmResponse(usuario));
-		//return new LoginResponseDTO(token, "Bearer", transformarEmResponse(usuario));
 	}
 
 	private UsuarioResponseDTO transformarEmResponse(Usuario usuario) {
