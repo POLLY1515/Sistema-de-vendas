@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,71 +17,48 @@ import br.com.lacasa.sistemavendas.security.JwtAuthFilter;
 import br.com.lacasa.sistemavendas.security.JwtService;
 
 @Configuration
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
+	
 
-    // Cria o JwtAuthFilter e entrega para o Spring gerenciar.
-    @Bean
-    public JwtAuthFilter jwtAuthFilter(
-            JwtService jwtService,
-            UsuarioRepository usuarioRepository) {
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-        return new JwtAuthFilter(
-                jwtService,
-                usuarioRepository
-        );
-    }
+	// Cria o JwtAuthFilter e entrega para o Spring gerenciar.
+	@Bean
+	public JwtAuthFilter jwtAuthFilter(JwtService jwtService, UsuarioRepository usuarioRepository) {
 
+		return new JwtAuthFilter(jwtService, usuarioRepository);
+	}
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            JwtAuthFilter jwtAuthFilter)
-            throws Exception {
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter
+) throws Exception {
 
-        return http
+		return http
 
-                .csrf(csrf -> csrf.disable())
+				.csrf(csrf -> csrf.disable())
 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+				.authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/auth/cadastrar",
-                                "/auth/login"
-                        ).permitAll()
+						.requestMatchers(HttpMethod.POST, "/auth/cadastrar", "/auth/login").permitAll()
+						.requestMatchers("/postgres/***").permitAll()
+						
+						.anyRequest().authenticated())
 
-                        .anyRequest().authenticated()
-                )
+				.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
 
-                .headers(headers ->
-                        headers.frameOptions(
-                                frame -> frame.sameOrigin()
-                        )
-                )
+				.httpBasic(httpBasic -> httpBasic.disable())
 
-                .httpBasic(httpBasic ->
-                        httpBasic.disable()
-                )
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
-              
-                .addFilterBefore(
-                        jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
-
-                .build();
-    }
+				.build();
+	}
 }
