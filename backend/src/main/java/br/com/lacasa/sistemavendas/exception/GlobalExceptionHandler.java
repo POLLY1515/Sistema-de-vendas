@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +44,18 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity.badRequest().body(resposta);
 	}
+	
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<Map<String, String>> tratarAcessoNegado(
+			AccessDeniedException exception
+			){
+		Map<String, String> resposta = Map.of(
+				"erro", "Acesso negado",
+				"mensagem", "Você nao tem permissao para acessar este recurso"
+				);
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(resposta);
+	}
+
 
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<Map<String, String>> tratarRuntimeException(RuntimeException ex) {
