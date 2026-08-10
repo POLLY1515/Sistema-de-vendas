@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,11 +39,13 @@ public class ProdutoController {
     private final ProdutoService produtoService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProdutoResponseDTO> cadastrar(@Valid @RequestBody ProdutoRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(produtoService.cadastrar(dto));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(produtoService.listarTodos());
     }
@@ -76,6 +79,7 @@ public class ProdutoController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProdutoResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProdutoRequestDTO dto
@@ -84,6 +88,7 @@ public class ProdutoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         produtoService.deletar(id);
         return ResponseEntity.noContent().build();
