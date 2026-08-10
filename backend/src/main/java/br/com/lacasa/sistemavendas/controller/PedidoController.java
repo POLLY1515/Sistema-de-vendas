@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,172 +30,97 @@ import jakarta.validation.Valid;
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    private final PedidoService pedidoService;
+	private final PedidoService pedidoService;
 
-    public PedidoController(PedidoService pedidoService) {
-        this.pedidoService = pedidoService;
-    }
+	public PedidoController(PedidoService pedidoService) {
+		this.pedidoService = pedidoService;
+	}
 
-    @PostMapping
-    public ResponseEntity<PedidoResponseDTO> criar(
-            @RequestBody @Valid PedidoRequestDTO request) {
+	@PostMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+	public ResponseEntity<PedidoResponseDTO> criar(@RequestBody @Valid PedidoRequestDTO request) {
 
-        PedidoResponseDTO response =
-                pedidoService.criarPedido(request);
+		PedidoResponseDTO response = pedidoService.criarPedido(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
-    }
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PedidoResponseDTO> buscarPorId(
-            @PathVariable Long id) {
+	@GetMapping("/{id}")
+	public ResponseEntity<PedidoResponseDTO> buscarPorId(@PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                pedidoService.buscarPorId(id)
-        );
-    }
+		return ResponseEntity.ok(pedidoService.buscarPorId(id));
+	}
 
-    @GetMapping
-    public ResponseEntity<Page<PedidoResponseDTO>> listarTodos(
-            @PageableDefault(
-                    size = 10,
-                    sort = "dataCriacao",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable) {
+	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+	public ResponseEntity<Page<PedidoResponseDTO>> listarTodos(
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(
-                pedidoService.listarTodos(pageable)
-        );
-    }
+		return ResponseEntity.ok(pedidoService.listarTodos(pageable));
+	}
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<Page<PedidoResponseDTO>> listarPorStatus(
-            @PathVariable StatusPedido status,
-            @PageableDefault(
-                    size = 10,
-                    sort = "dataCriacao",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable) {
+	@GetMapping("/status/{status}")
+	public ResponseEntity<Page<PedidoResponseDTO>> listarPorStatus(@PathVariable StatusPedido status,
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(
-                pedidoService.listarPorStatus(status, pageable)
-        );
-    }
+		return ResponseEntity.ok(pedidoService.listarPorStatus(status, pageable));
+	}
 
-    @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<Page<PedidoResponseDTO>> listarPorCliente(
-            @PathVariable Long clienteId,
-            @PageableDefault(
-                    size = 10,
-                    sort = "dataCriacao",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable) {
+	@GetMapping("/cliente/{clienteId}")
+	public ResponseEntity<Page<PedidoResponseDTO>> listarPorCliente(@PathVariable Long clienteId,
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(
-                pedidoService.listarPorCliente(
-                        clienteId,
-                        pageable
-                )
-        );
-    }
+		return ResponseEntity.ok(pedidoService.listarPorCliente(clienteId, pageable));
+	}
 
-    @GetMapping("/periodo")
-    public ResponseEntity<Page<PedidoResponseDTO>> listarPorPeriodo(
-            @RequestParam
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime inicio,
+	@GetMapping("/periodo")
+	public ResponseEntity<Page<PedidoResponseDTO>> listarPorPeriodo(
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
 
-            @RequestParam
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime fim,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
 
-            @PageableDefault(
-                    size = 10,
-                    sort = "dataCriacao",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable) {
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(
-                pedidoService.listarPorPeriodo(
-                        inicio,
-                        fim,
-                        pageable
-                )
-        );
-    }
+		return ResponseEntity.ok(pedidoService.listarPorPeriodo(inicio, fim, pageable));
+	}
 
-    @GetMapping("/relatorio")
-    public ResponseEntity<Page<PedidoResponseDTO>>
-            listarPorStatusEPeriodo(
+	@GetMapping("/relatorio")
+	public ResponseEntity<Page<PedidoResponseDTO>> listarPorStatusEPeriodo(
 
-            @RequestParam StatusPedido status,
+			@RequestParam StatusPedido status,
 
-            @RequestParam
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime inicio,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
 
-            @RequestParam
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime fim,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
 
-            @PageableDefault(
-                    size = 10,
-                    sort = "dataCriacao",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable) {
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        return ResponseEntity.ok(
-                pedidoService.listarPorStatusEPeriodo(
-                        status,
-                        inicio,
-                        fim,
-                        pageable
-                )
-        );
-    }
+		return ResponseEntity.ok(pedidoService.listarPorStatusEPeriodo(status, inicio, fim, pageable));
+	}
 
-    @GetMapping("/resumo")
-    public ResponseEntity<ResumoVendasDTO> resumoVendas() {
+	@GetMapping("/resumo")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<ResumoVendasDTO> resumoVendas() {
 
-        ResumoVendasDTO resumo =
-                pedidoService
-                        .gerarResumoDeVendasFinalizadas();
+		ResumoVendasDTO resumo = pedidoService.gerarResumoDeVendasFinalizadas();
 
-        return ResponseEntity.ok(resumo);
-    }
+		return ResponseEntity.ok(resumo);
+	}
 
-    @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<PedidoResponseDTO> cancelar(
-            @PathVariable Long id) {
+	@PatchMapping("/{id}/cancelar")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id) {
 
-        PedidoResponseDTO response =
-                pedidoService.cancelarPedido(id);
+		PedidoResponseDTO response = pedidoService.cancelarPedido(id);
 
-        return ResponseEntity.ok(response);
-    }
+		return ResponseEntity.ok(response);
+	}
 
-    @PatchMapping("/{id}/finalizar")
-    public ResponseEntity<PedidoResponseDTO> finalizar(
-            @PathVariable Long id) {
+	@PatchMapping("/{id}/finalizar")
+	public ResponseEntity<PedidoResponseDTO> finalizar(@PathVariable Long id) {
 
-        PedidoResponseDTO response =
-                pedidoService.finalizarPedido(id);
+		PedidoResponseDTO response = pedidoService.finalizarPedido(id);
 
-        return ResponseEntity.ok(response);
-    }
+		return ResponseEntity.ok(response);
+	}
 }
