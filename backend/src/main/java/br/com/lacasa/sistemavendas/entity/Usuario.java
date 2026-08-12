@@ -38,7 +38,7 @@ public class Usuario {
 	private PerfilUsuario perfil;
 	
 	@Column(nullable = false)
-	private boolean ativo = true;
+	private Boolean ativo = true;
 	
 	@Column(nullable = false)
 	private LocalDateTime dataCriacao = LocalDateTime.now();
