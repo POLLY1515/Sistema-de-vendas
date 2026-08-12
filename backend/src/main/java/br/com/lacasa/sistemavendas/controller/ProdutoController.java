@@ -6,7 +6,6 @@ import java.util.Set;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.lacasa.sistemavendas.dto.ApiResponseDTO;
 import br.com.lacasa.sistemavendas.dto.PaginaResponseDTO;
 import br.com.lacasa.sistemavendas.dto.ProdutoRequestDTO;
 import br.com.lacasa.sistemavendas.dto.ProdutoResponseDTO;
@@ -32,87 +32,81 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProdutoController {
 
-    private static final Set<String> CAMPOS_ORDENACAO = Set.of(
-            "id", "nome", "preco", "quantidadeEstoque"
-    );
+	private static final Set<String> CAMPOS_ORDENACAO = Set.of("id", "nome", "preco", "quantidadeEstoque");
 
-    private final ProdutoService produtoService;
+	private final ProdutoService produtoService;
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProdutoResponseDTO> cadastrar(@Valid @RequestBody ProdutoRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(produtoService.cadastrar(dto));
-    }
+	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<ApiResponseDTO<ProdutoResponseDTO>> cadastrar(@Valid @RequestBody ProdutoRequestDTO dto) {
+		ProdutoResponseDTO produto = produtoService.cadastrar(dto);
+		ApiResponseDTO<ProdutoResponseDTO> resposta = new ApiResponseDTO<>(true, "Produto cadastrado com sucesso",
+				produto);
+		return ResponseEntity.ok(resposta);
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
-    public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(produtoService.listarTodos());
-    }
+	}
 
-    @GetMapping("/paginado")
-    public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> listarPaginado(
-            @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanho,
-            @RequestParam(defaultValue = "nome") String ordenarPor,
-            @RequestParam(defaultValue = "asc") String direcao
-    ) {
-        Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
-        return ResponseEntity.ok(produtoService.listarPaginado(pageable));
-    }
+	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
+	public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
+		return ResponseEntity.ok(produtoService.listarTodos());
+	}
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(produtoService.buscarPorId(id));
-    }
+	@GetMapping("/paginado")
+	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> listarPaginado(
+			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
+			@RequestParam(defaultValue = "nome") String ordenarPor,
+			@RequestParam(defaultValue = "asc") String direcao) {
+		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
+		return ResponseEntity.ok(produtoService.listarPaginado(pageable));
+	}
 
-    @GetMapping("/buscar")
-    public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(
-            @RequestParam String nome,
-            @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanho,
-            @RequestParam(defaultValue = "nome") String ordenarPor,
-            @RequestParam(defaultValue = "asc") String direcao
-    ) {
-        Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
-        return ResponseEntity.ok(produtoService.buscarPorNome(nome, pageable));
-    }
+	@GetMapping("/{id}")
+	public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
+		return ResponseEntity.ok(produtoService.buscarPorId(id));
+	}
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProdutoResponseDTO> atualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody ProdutoRequestDTO dto
-    ) {
-        return ResponseEntity.ok(produtoService.atualizar(id, dto));
-    }
+	@GetMapping("/buscar")
+	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(@RequestParam String nome,
+			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
+			@RequestParam(defaultValue = "nome") String ordenarPor,
+			@RequestParam(defaultValue = "asc") String direcao) {
+		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
+		return ResponseEntity.ok(produtoService.buscarPorNome(nome, pageable));
+	}
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        produtoService.deletar(id);
-        return ResponseEntity.noContent().build();
-    }
+	@PutMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<ProdutoResponseDTO> atualizar(@PathVariable Long id,
+			@Valid @RequestBody ProdutoRequestDTO dto) {
+		return ResponseEntity.ok(produtoService.atualizar(id, dto));
+	}
 
-    private Pageable criarPageable(int pagina, int tamanho, String ordenarPor, String direcao) {
-        if (pagina < 0) {
-            throw new RegraNegocioException("O número da página não pode ser negativo.");
-        }
-        if (tamanho < 1) {
-            throw new RegraNegocioException("O tamanho da página deve ser maior que zero.");
-        }
-        if (!CAMPOS_ORDENACAO.contains(ordenarPor)) {
-            throw new RegraNegocioException("Campo de ordenação inválido para produtos.");
-        }
-        if (!direcao.equalsIgnoreCase("asc") && !direcao.equalsIgnoreCase("desc")) {
-            throw new RegraNegocioException("A direção deve ser 'asc' ou 'desc'.");
-        }
+	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Void> deletar(@PathVariable Long id) {
+		produtoService.deletar(id);
+		return ResponseEntity.noContent().build();
+	}
 
-        int tamanhoLimitado = Math.min(tamanho, 50);
-        Sort sort = direcao.equalsIgnoreCase("desc")
-                ? Sort.by(ordenarPor).descending()
-                : Sort.by(ordenarPor).ascending();
+	private Pageable criarPageable(int pagina, int tamanho, String ordenarPor, String direcao) {
+		if (pagina < 0) {
+			throw new RegraNegocioException("O número da página não pode ser negativo.");
+		}
+		if (tamanho < 1) {
+			throw new RegraNegocioException("O tamanho da página deve ser maior que zero.");
+		}
+		if (!CAMPOS_ORDENACAO.contains(ordenarPor)) {
+			throw new RegraNegocioException("Campo de ordenação inválido para produtos.");
+		}
+		if (!direcao.equalsIgnoreCase("asc") && !direcao.equalsIgnoreCase("desc")) {
+			throw new RegraNegocioException("A direção deve ser 'asc' ou 'desc'.");
+		}
 
-        return PageRequest.of(pagina, tamanhoLimitado, sort);
-    }
+		int tamanhoLimitado = Math.min(tamanho, 50);
+		Sort sort = direcao.equalsIgnoreCase("desc") ? Sort.by(ordenarPor).descending()
+				: Sort.by(ordenarPor).ascending();
+
+		return PageRequest.of(pagina, tamanhoLimitado, sort);
+	}
 }
