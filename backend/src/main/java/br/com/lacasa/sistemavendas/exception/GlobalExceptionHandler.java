@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import br.com.lacasa.sistemavendas.dto.ApiErrorDTO;
 import br.com.lacasa.sistemavendas.dto.ErroResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -28,42 +29,26 @@ public class GlobalExceptionHandler {
 		return criarResposta(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
 	}
 
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<Map<String, Object>> tratarErroDeValidacao(MethodArgumentNotValidException ex,
-			HttpServletRequest request) {
-		Map<String, String> campos = new HashMap<>();
-		ex.getBindingResult().getFieldErrors().forEach(erro -> campos.put(erro.getField(), erro.getDefaultMessage()));
+	public ResponseEntity<ApiErrorDTO> tratarErroDeValidacao(MethodArgumentNotValidException exception) {
+		String mensagem = exception.getFieldErrors().stream().findFirst()
+				.map(erro -> erro.getField() + ": " + erro.getDefaultMessage()).orElse("Dados invalidos");
 
-		Map<String, Object> resposta = new HashMap<>();
-		resposta.put("dataHora", LocalDateTime.now());
-		resposta.put("status", HttpStatus.BAD_REQUEST.value());
-		resposta.put("erro", "Bad Request");
-		resposta.put("mensagem", "Existem campos inválidos.");
-		resposta.put("caminho", request.getRequestURI());
-		resposta.put("campos", campos);
-
-		return ResponseEntity.badRequest().body(resposta);
-	}
-	
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<Map<String, String>> tratarAcessoNegado(
-			AccessDeniedException exception
-			){
-		Map<String, String> resposta = Map.of(
-				"erro", "Acesso negado",
-				"mensagem", "Você nao tem permissao para acessar este recurso"
-				);
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(resposta);
-	}
-
-
-	@ExceptionHandler(RuntimeException.class)
-	public ResponseEntity<Map<String, String>> tratarRuntimeException(RuntimeException ex) {
-		Map<String, String> erro = new HashMap<>();
-		erro.put("erro", ex.getMessage());
+		ApiErrorDTO erro = new ApiErrorDTO(false, "Erro de validação", mensagem, LocalDateTime.now());
 
 		return ResponseEntity.badRequest().body(erro);
 	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ApiErrorDTO> tratarAcessoNegado(AccessDeniedException exception) {
+		ApiErrorDTO erro = new ApiErrorDTO(false, "Acesso negado", "Voce nao tem permissao para acessar este recurso",
+				LocalDateTime.now());
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
+
+	}
+
+	
 
 	private ResponseEntity<ErroResponseDTO> criarResposta(HttpStatus status, String mensagem,
 			HttpServletRequest request) {
