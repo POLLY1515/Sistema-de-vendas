@@ -23,7 +23,8 @@ public class ClienteService {
 
     public ClienteResponseDTO cadastrar(ClienteRequestDTO request) {
         validarEmailECpf(request.getEmail(), request.getCpf(), null);
-
+        validarTelefone(request.getTelefone());
+        
         Cliente cliente = new Cliente();
         cliente.setNome(request.getNome());
         cliente.setEmail(request.getEmail());
@@ -101,7 +102,15 @@ public class ClienteService {
             throw new RegraNegocioException("Já existe um cliente cadastrado com este CPF.");
         }
     }
-
+    
+    private void validarTelefone(String telefone) {
+    	
+    		if(clienteRepository.existsByTelefone(telefone)) {
+    			throw new  RegraNegocioException("Já existe um cliente cadastrado com este Telefone!");
+    		}
+    }
+    
+    
     private ClienteResponseDTO converterParaResponse(Cliente cliente) {
         return new ClienteResponseDTO(
                 cliente.getId(),
