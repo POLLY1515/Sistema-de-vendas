@@ -1,186 +1,287 @@
-# # Sistema de Vendas API
+# Sistema de Vendas API
 
-Sistema back-end desenvolvido em Java para gerenciamento de vendas, com foco em organização de código, regras de negócio e manipulação de dados.
+API REST backend desenvolvida em **Java 21 utilizando Spring Boot** para gerenciamento de operações comerciais.
 
-## 🚀 Objetivo
+O projeto implementa uma aplicação de vendas com gerenciamento de usuários, clientes, produtos e pedidos, aplicando boas práticas de desenvolvimento backend, arquitetura em camadas, persistência de dados e autenticação segura.
 
-O objetivo deste projeto é simular uma aplicação de vendas, permitindo estruturar funcionalidades comuns em sistemas comerciais, como cadastro, controle e processamento de informações.
+---
 
+# 🚀 Objetivo
 
-## 🛠️ Tecnologias utilizadas
+Construir uma aplicação backend simulando um sistema comercial, aplicando conceitos utilizados no desenvolvimento de APIs profissionais.
 
-* Java 21
-* Spring Boot
-* Spring Data JPA
-* PostgreSQL
-* Maven
-* Bean Validation
-* Lombok
-* Git e GitHub
+O projeto contempla:
 
-## 🏗️ Arquitetura
+- gerenciamento de usuários;
+- autenticação e autorização;
+- cadastro de clientes;
+- cadastro de produtos;
+- operações relacionadas a pedidos.
 
-O projeto segue uma arquitetura em camadas, separando responsabilidades entre os componentes da aplicação.
+---
 
+# 🛠️ Tecnologias utilizadas
 
+- Java 21
+- Spring Boot
+- Spring Security
+- JWT (JSON Web Token)
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
+- Maven
+- Lombok
+- Bean Validation
+- Git e GitHub
+
+---
+
+# 🏗️ Arquitetura
+
+A aplicação utiliza arquitetura em camadas, separando responsabilidades entre os componentes do sistema.
+
+```
 Controller
-↓
+      |
+      ↓
 Service
-↓
+      |
+      ↓
 Repository
-↓
-Database
+      |
+      ↓
+Database PostgreSQL
+```
+
+## Camadas
+
+### Controller
+
+Responsável por:
+
+- receber requisições HTTP;
+- validar entradas;
+- retornar respostas da API através de DTOs.
+
+---
+
+### Service
+
+Responsável por:
+
+- regras de negócio;
+- processamento das operações;
+- conversão entre DTOs e entidades.
+
+---
+
+### Repository
+
+Responsável pela comunicação com o banco de dados utilizando Spring Data JPA.
+
+---
+
+### Entity
+
+Representa as entidades persistidas no banco de dados.
+
+---
+
+### DTO
+
+Responsável pela comunicação entre API e cliente, evitando exposição direta das entidades.
+
+---
+
+# 🔐 Segurança
+
+A aplicação utiliza Spring Security com autenticação baseada em JWT.
+
+Funcionalidades implementadas:
+
+- autenticação de usuários;
+- geração de token JWT;
+- validação de token;
+- proteção de endpoints;
+- controle de acesso por perfil de usuário.
+
+Perfis utilizados:
+
+- ADMIN
+- VENDEDOR
+
+---
+
+# ✅ Funcionalidades implementadas
+
+## Usuários
+
+✔ Cadastro de usuários
+
+✔ Autenticação através de login
+
+✔ Geração de token JWT
 
 
-Responsabilidades:
+## Clientes
 
-- **Controller:** responsável por receber as requisições HTTP e retornar as respostas da API.
-- **Service:** concentra as regras de negócio da aplicação.
-- **Repository:** realiza o acesso aos dados utilizando Spring Data JPA.
-- **Entity:** representa os dados persistidos no banco de dados.
+✔ Cadastro de clientes
 
-## ✅ Funcionalidades implementadas
+✔ Consulta de clientes
 
-* Cadastro de produtos
-* Listagem e busca de produtos
-* Atualização de produtos
-* Exclusão de produtos
-* Consulta de pedidos
-* Geração de resumo de dados
+✔ Busca por ID
 
-* ## ▶️ Como executar o projeto
+✔ Atualização
 
-### Pré-requisitos
+✔ Exclusão
+
+
+## Produtos
+
+✔ Cadastro de produtos
+
+✔ Listagem de produtos
+
+✔ Busca por ID
+
+✔ Atualização
+
+✔ Exclusão
+
+
+## Pedidos
+
+✔ Consulta de pedidos
+
+✔ Gerenciamento de operações relacionadas às vendas
+
+---
+
+# 📌 Endpoints principais
+
+## Autenticação
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/auth/login` | Autenticação do usuário |
+
+
+## Produtos
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/produtos` | Cadastrar produto |
+| GET | `/produtos` | Listar produtos |
+| GET | `/produtos/{id}` | Buscar produto |
+| PUT | `/produtos/{id}` | Atualizar produto |
+| DELETE | `/produtos/{id}` | Remover produto |
+
+
+## Clientes
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| POST | `/clientes` | Cadastrar cliente |
+| GET | `/clientes` | Listar clientes |
+| GET | `/clientes/{id}` | Buscar cliente |
+| PUT | `/clientes/{id}` | Atualizar cliente |
+| DELETE | `/clientes/{id}` | Remover cliente |
+
+---
+
+# 📄 Exemplo de requisição
+
+## Cadastro de produto
+
+```json
+{
+  "nome": "Notebook",
+  "preco": 3500.00,
+  "quantidadeEstoque": 10
+}
+```
+
+## Resposta
+
+```json
+{
+  "id": 1,
+  "nome": "Notebook",
+  "preco": 3500.00,
+  "quantidadeEstoque": 10
+}
+```
+
+---
+
+# ▶️ Como executar o projeto
+
+## Pré-requisitos
 
 - Java 21
 - PostgreSQL
 - Git
 
-### Configuração
 
-1. Clone o repositório:
+## Clonar o projeto
 
 ```bash
 git clone https://github.com/POLLY1515/Sistema-de-vendas.git
 ```
 
-2. Crie no PostgreSQL um banco chamado:
-
-```text
-sistema-vendas
-```
-
-3. Configure a variável `DB_PASSWORD` com a senha do seu PostgreSQL.
-
-4. Entre na pasta do back-end:
+Acesse:
 
 ```bash
 cd Sistema-de-vendas/backend
 ```
 
-5. Execute o projeto no Windows:
+Configure o banco PostgreSQL e informe a variável:
+
+```
+DB_PASSWORD
+```
+
+Execute:
 
 ```bash
 mvnw.cmd spring-boot:run
 ```
 
-A aplicação será iniciada em:
+A aplicação estará disponível:
 
-```text
+```
 http://localhost:8080
 ```
-## 📦 Endpoints de produtos
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/produtos` | Cadastra um produto |
-| GET | `/produtos` | Lista todos os produtos |
-| GET | `/produtos/{id}` | Busca um produto pelo ID |
-| PUT | `/produtos/{id}` | Atualiza um produto |
-| DELETE | `/produtos/{id}` | Exclui um produto |
+---
 
-### Exemplo de requisição
+# 📚 Conceitos aplicados
 
-```json
-{
-  "nome": "Notebook",
-  "preco": 3500.00,
-  "quantidadeEstoque": 10
-}
-```
-
-### Exemplo de resposta
-
-```json
-{
-  "id": 1,
-  "nome": "Notebook",
-  "preco": 3500.00,
-  "quantidadeEstoque": 10
-}
-```
-## 👤 Endpoints de clientes
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/clientes` | Cadastra um cliente |
-| GET | `/clientes` | Lista todos os clientes |
-| GET | `/clientes/{id}` | Busca um cliente pelo ID |
-| PUT | `/clientes/{id}` | Atualiza um cliente |
-| DELETE | `/clientes/{id}` | Exclui um cliente |
-
-### Exemplo de requisição
-
-```json
-{
-  "nome": "Maria Silva",
-  "email": "maria@email.com",
-  "telefone": "11999999999",
-  "cpf": "12345678901"
-}
-```
-
-### Exemplo de resposta
-
-```json
-{
-  "id": 1,
-  "nome": "Maria Silva",
-  "email": "maria@email.com",
-  "telefone": "11999999999",
-  "cpf": "12345678901"
-}
-```
-
-## 📚 Aprendizados
-
-Durante o desenvolvimento deste projeto, foram praticados conceitos como:
-
-- Organização de camadas
-- Estruturação de projetos Java
+- Desenvolvimento de APIs REST
+- Arquitetura em camadas
+- Separação de responsabilidades
+- DTOs para entrada e saída de dados
+- Persistência utilizando JPA/Hibernate
+- Validação de dados
 - Regras de negócio
-- Persistência de dados
-- Boas práticas no desenvolvimento back-end
+- Autenticação e autorização com JWT
+- Controle de acesso por permissões
 
-## 👩‍💻 Desenvolvedora
+---
 
-Projeto desenvolvido por Poliana Amarante.
-## 🚧 Status do projeto
+# 🔄 Próximas evoluções
 
-Projeto em desenvolvimento contínuo.
+- Integração com frontend utilizando Next.js
+- Documentação da API com Swagger/OpenAPI
+- Testes automatizados
+- Melhorias de segurança
+- Deploy da aplicação
 
-Atualmente possui:
+---
 
-- Cadastro, consulta, atualização e exclusão de produtos;
-- Cadastro e gerenciamento de clientes;
-- Persistência utilizando PostgreSQL;
-- Estrutura backend organizada com Spring Boot.
+# 👩‍💻 Desenvolvedora
 
-Próximas evoluções:
+**Poliana Amarante**
 
-- Testes automatizados;
-- Documentação Swagger/OpenAPI;
-- Docker;
-- Migrations com Flyway.
-Em desenvolvimento. O back-end já possui operações de cadastro, consulta, atualização e exclusão de produtos, além da consulta de pedidos e geração de resumo.
-
+GitHub:
+https://github.com/POLLY1515
