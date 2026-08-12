@@ -19,117 +19,93 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ClienteService {
 
-    private final ClienteRepository clienteRepository;
+	private final ClienteRepository clienteRepository;
 
-    public ClienteResponseDTO cadastrar(ClienteRequestDTO request) {
-        validarEmailECpf(request.getEmail(), request.getCpf(), null);
-        validarTelefone(request.getTelefone());
-        
-        Cliente cliente = new Cliente();
-        cliente.setNome(request.getNome());
-        cliente.setEmail(request.getEmail());
-        cliente.setTelefone(request.getTelefone());
-        cliente.setCpf(request.getCpf());
+	public ClienteResponseDTO cadastrar(ClienteRequestDTO request) {
+		validarEmailECpf(request.getEmail(), request.getCpf(), null);
+		validarTelefone(request.getTelefone());
 
-        Cliente clienteSalvo = clienteRepository.save(cliente);
-        return converterParaResponse(clienteSalvo);
-    }
+		Cliente cliente = new Cliente();
+		cliente.setNome(request.getNome());
+		cliente.setEmail(request.getEmail());
+		cliente.setTelefone(request.getTelefone());
+		cliente.setCpf(request.getCpf());
 
-    public List<ClienteResponseDTO> listarTodos() {
-        return clienteRepository.findAll()
-                .stream()
-                .map(this::converterParaResponse)
-                .toList();
-    }
+		Cliente clienteSalvo = clienteRepository.save(cliente);
+		return converterParaResponse(clienteSalvo);
+	}
 
-    public ClienteResponseDTO buscarPorId(Long id) {
-        return converterParaResponse(buscarClienteOuFalhar(id));
-    }
+	public List<ClienteResponseDTO> listarTodos() {
+		return clienteRepository.findAll().stream().map(this::converterParaResponse).toList();
+	}
 
-    public PaginaResponseDTO<ClienteResponseDTO> buscarPorTermo(String termo, Pageable pageable) {
-        if (termo == null || termo.isBlank()) {
-            throw new RegraNegocioException("Informe um termo para a busca de clientes.");
-        }
+	public ClienteResponseDTO buscarPorId(Long id) {
+		return converterParaResponse(buscarClienteOuFalhar(id));
+	}
 
-        String termoNormalizado = termo.trim();
-        Page<Cliente> pagina = clienteRepository
-                .findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                        termoNormalizado,
-                        termoNormalizado,
-                        pageable
-                );
+	public PaginaResponseDTO<ClienteResponseDTO> buscarPorTermo(String termo, Pageable pageable) {
+		if (termo == null || termo.isBlank()) {
+			throw new RegraNegocioException("Informe um termo para a busca de clientes.");
+		}
 
-        return montarPaginaResponse(pagina.map(this::converterParaResponse));
-    }
+		String termoNormalizado = termo.trim();
+		Page<Cliente> pagina = clienteRepository.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(
+				termoNormalizado, termoNormalizado, pageable);
 
-    public ClienteResponseDTO atualizar(Long id, ClienteRequestDTO request) {
-        Cliente cliente = buscarClienteOuFalhar(id);
-        validarEmailECpf(request.getEmail(), request.getCpf(), id);
+		return montarPaginaResponse(pagina.map(this::converterParaResponse));
+	}
 
-        cliente.setNome(request.getNome());
-        cliente.setEmail(request.getEmail());
-        cliente.setTelefone(request.getTelefone());
-        cliente.setCpf(request.getCpf());
+	public ClienteResponseDTO atualizar(Long id, ClienteRequestDTO request) {
+		Cliente cliente = buscarClienteOuFalhar(id);
+		validarEmailECpf(request.getEmail(), request.getCpf(), id);
 
-        return converterParaResponse(clienteRepository.save(cliente));
-    }
+		cliente.setNome(request.getNome());
+		cliente.setEmail(request.getEmail());
+		cliente.setTelefone(request.getTelefone());
+		cliente.setCpf(request.getCpf());
 
-    public void remover(Long id) {
-        clienteRepository.delete(buscarClienteOuFalhar(id));
-    }
+		return converterParaResponse(clienteRepository.save(cliente));
+	}
 
-    private Cliente buscarClienteOuFalhar(Long id) {
-        return clienteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "Cliente com ID " + id + " não encontrado."
-                ));
-    }
+	public void remover(Long id) {
+		clienteRepository.delete(buscarClienteOuFalhar(id));
+	}
 
-    private void validarEmailECpf(String email, String cpf, Long idAtual) {
-        boolean emailJaCadastrado = idAtual == null
-                ? clienteRepository.existsByEmailIgnoreCase(email)
-                : clienteRepository.existsByEmailIgnoreCaseAndIdNot(email, idAtual);
+	private Cliente buscarClienteOuFalhar(Long id) {
+		return clienteRepository.findById(id)
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Cliente com ID " + id + " não encontrado."));
+	}
 
-        if (emailJaCadastrado) {
-            throw new RegraNegocioException("Já existe um cliente cadastrado com este e-mail.");
-        }
+	private void validarEmailECpf(String email, String cpf, Long idAtual) {
+		boolean emailJaCadastrado = idAtual == null ? clienteRepository.existsByEmailIgnoreCase(email)
+				: clienteRepository.existsByEmailIgnoreCaseAndIdNot(email, idAtual);
 
-        boolean cpfJaCadastrado = idAtual == null
-                ? clienteRepository.existsByCpf(cpf)
-                : clienteRepository.existsByCpfAndIdNot(cpf, idAtual);
+		if (emailJaCadastrado) {
+			throw new RegraNegocioException("Já existe um cliente cadastrado com este e-mail.");
+		}
 
-        if (cpfJaCadastrado) {
-            throw new RegraNegocioException("Já existe um cliente cadastrado com este CPF.");
-        }
-    }
-    
-    private void validarTelefone(String telefone) {
-    	
-    		if(clienteRepository.existsByTelefone(telefone)) {
-    			throw new  RegraNegocioException("Já existe um cliente cadastrado com este Telefone!");
-    		}
-    }
-    
-    
-    private ClienteResponseDTO converterParaResponse(Cliente cliente) {
-        return new ClienteResponseDTO(
-                cliente.getId(),
-                cliente.getNome(),
-                cliente.getEmail(),
-                cliente.getTelefone(),
-                cliente.getCpf()
-        );
-    }
+		boolean cpfJaCadastrado = idAtual == null ? clienteRepository.existsByCpf(cpf)
+				: clienteRepository.existsByCpfAndIdNot(cpf, idAtual);
 
-    private PaginaResponseDTO<ClienteResponseDTO> montarPaginaResponse(Page<ClienteResponseDTO> pagina) {
-        return new PaginaResponseDTO<>(
-                pagina.getContent(),
-                pagina.getNumber(),
-                pagina.getSize(),
-                pagina.getTotalElements(),
-                pagina.getTotalPages(),
-                pagina.isFirst(),
-                pagina.isLast()
-        );
-    }
+		if (cpfJaCadastrado) {
+			throw new RegraNegocioException("Já existe um cliente cadastrado com este CPF.");
+		}
+	}
+
+	private void validarTelefone(String telefone) {
+
+		if (clienteRepository.existsByTelefone(telefone)) {
+			throw new RegraNegocioException("Já existe um cliente cadastrado com este Telefone!");
+		}
+	}
+
+	private ClienteResponseDTO converterParaResponse(Cliente cliente) {
+		return new ClienteResponseDTO(cliente.getId(), cliente.getNome(), cliente.getEmail(), cliente.getTelefone(),
+				cliente.getCpf());
+	}
+
+	private PaginaResponseDTO<ClienteResponseDTO> montarPaginaResponse(Page<ClienteResponseDTO> pagina) {
+		return new PaginaResponseDTO<>(pagina.getContent(), pagina.getNumber(), pagina.getSize(),
+				pagina.getTotalElements(), pagina.getTotalPages(), pagina.isFirst(), pagina.isLast());
+	}
 }
