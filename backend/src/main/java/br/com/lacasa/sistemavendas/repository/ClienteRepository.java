@@ -9,6 +9,7 @@ import br.com.lacasa.sistemavendas.entity.Cliente;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     boolean existsByEmailIgnoreCase(String email);
+    boolean existsByTelefone(String telefone);
 
     boolean existsByEmailIgnoreCaseAndIdNot(
             String email,
