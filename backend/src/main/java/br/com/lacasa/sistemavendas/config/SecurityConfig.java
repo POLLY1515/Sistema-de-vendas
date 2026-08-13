@@ -45,7 +45,7 @@ public class SecurityConfig {
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/auth/cadastrar", "/auth/login").permitAll()
-						.requestMatchers(HttpMethod.OPTIONS, "/***").permitAll()
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.requestMatchers("/postgres/***").permitAll()
 						.anyRequest().authenticated()
 						)
