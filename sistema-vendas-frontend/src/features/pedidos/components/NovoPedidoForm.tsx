@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import type {
   CarrinhoItem,
   ClienteResumo,
@@ -38,7 +38,7 @@ export function NovoPedidoForm(props: Props) {
           <ClienteSelect
             clientes={props.clientes}
             value={props.clienteId}
-            disabled={props.carregandoDados}
+            disabled={props.carregandoDados || props.loading}
             onChange={props.onClienteChange}
           />
 
@@ -46,7 +46,7 @@ export function NovoPedidoForm(props: Props) {
             produtos={props.produtos}
             produtoId={props.produtoId}
             quantidade={props.quantidade}
-            disabled={props.carregandoDados}
+            disabled={props.carregandoDados || props.loading}
             onProdutoChange={props.onProdutoChange}
             onQuantidadeChange={props.onQuantidadeChange}
             onAdicionar={props.onAdicionarProduto}
@@ -63,15 +63,16 @@ export function NovoPedidoForm(props: Props) {
         total={props.total}
         quantidadeItens={props.itens.length}
       >
-        <Button
+        <LoadingButton
           type="button"
           onClick={props.onSalvarPedido}
           loading={props.loading}
+          loadingText="Finalizando venda..."
           disabled={props.carregandoDados}
           className="w-full"
         >
           Finalizar venda
-        </Button>
+        </LoadingButton>
       </PedidoResumo>
     </div>
   );

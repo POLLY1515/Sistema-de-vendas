@@ -24,7 +24,8 @@ import {
   excluirCliente,
 } from "@/features/clientes/services/clienteService";
 import type { Cliente } from "@/features/clientes/types";
-import { obterMensagemErro } from "@/lib/apiError";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -41,7 +42,9 @@ export default function ClientesPage() {
   const [excluindoId, setExcluindoId] =
     useState<number | null>(null);
   const [erro, setErro] = useState("");
-  const [mensagem, setMensagem] = useState("");
+
+  const salvarAction = useAsyncAction();
+  const excluirAction = useAsyncAction();
 
   const carregarClientes = useCallback(async () => {
     try {
@@ -59,7 +62,7 @@ export default function ClientesPage() {
       setTotalElementos(resposta.totalElements);
     } catch (error) {
       setErro(
-        obterMensagemErro(
+        getErrorMessage(
           error,
           "Não foi possível carregar os clientes."
         )
@@ -75,7 +78,6 @@ export default function ClientesPage() {
 
   function editarCliente(cliente: Cliente) {
     setClienteEditando(cliente);
-    setMensagem("");
     setErro("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -83,63 +85,68 @@ export default function ClientesPage() {
   async function salvarCliente(
     dados: ClienteFormData
   ): Promise<boolean> {
-    try {
-      setErro("");
-      setMensagem("");
+    const editando = Boolean(clienteEditando);
 
-      if (clienteEditando) {
-        await atualizarCliente(clienteEditando.id, dados);
-        setClienteEditando(null);
-        setMensagem("Cliente atualizado com sucesso.");
-      } else {
-        await criarCliente(dados);
-        setMensagem("Cliente cadastrado com sucesso.");
+    const resultado = await salvarAction.execute(
+      async () => {
+        if (clienteEditando) {
+          await atualizarCliente(clienteEditando.id, dados);
+        } else {
+          await criarCliente(dados);
+        }
+
+        if (pagina !== 0) {
+          setPagina(0);
+        } else {
+          await carregarClientes();
+        }
+
+        return true;
+      },
+      {
+        successMessage: editando
+          ? "Cliente atualizado com sucesso."
+          : "Cliente cadastrado com sucesso.",
+        errorMessage: "Não foi possível salvar o cliente.",
       }
+    );
 
-      if (pagina !== 0) {
-        setPagina(0);
-      } else {
-        await carregarClientes();
-      }
-
-      return true;
-    } catch (error) {
-      setErro(
-        obterMensagemErro(
-          error,
-          "Não foi possível salvar o cliente."
-        )
-      );
-      return false;
+    if (resultado.ok && editando) {
+      setClienteEditando(null);
     }
+
+    return resultado.ok;
   }
 
   async function confirmarExclusao() {
     if (!clienteParaExcluir) return;
 
-    try {
-      setExcluindoId(clienteParaExcluir.id);
-      setErro("");
-      setMensagem("");
+    const cliente = clienteParaExcluir;
+    setExcluindoId(cliente.id);
 
-      await excluirCliente(clienteParaExcluir.id);
-      setMensagem("Cliente excluído com sucesso.");
-      setClienteParaExcluir(null);
+    const resultado = await excluirAction.execute(
+      async () => {
+        await excluirCliente(cliente.id);
 
-      if (clientes.length === 1 && pagina > 0) {
-        setPagina((valor) => valor - 1);
-      } else {
-        await carregarClientes();
+        if (clientes.length === 1 && pagina > 0) {
+          setPagina((valor) => valor - 1);
+        } else {
+          await carregarClientes();
+        }
+
+        return cliente;
+      },
+      {
+        successMessage: (item) =>
+          `Cliente "${item.nome}" excluído com sucesso.`,
+        errorMessage: "Não foi possível excluir o cliente.",
       }
-    } catch (error) {
-      setErro(
-        obterMensagemErro(
-          error,
-          "Não foi possível excluir o cliente."
-        )
-      );
-    } finally {
-      setExcluindoId(null);
+    );
+
+    setExcluindoId(null);
+
+    if (resultado.ok) {
+      setClienteParaExcluir(null);
     }
   }
 
@@ -163,24 +170,18 @@ export default function ClientesPage() {
         actions={
           <span className="text-sm text-slate-500">
             {totalElementos}{" "}
-            {totalElementos === 1 ? "cliente" : "clientes"}
+            {totalElementos === 1
+              ? "cliente"
+              : "clientes"}
           </span>
         }
       />
 
       <ErrorAlert message={erro} />
 
-      {mensagem && (
-        <div
-          role="status"
-          className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
-        >
-          {mensagem}
-        </div>
-      )}
-
       <ClienteForm
         clienteEditando={clienteEditando}
+        salvando={salvarAction.loading}
         onSave={salvarCliente}
         onCancelEdit={() => setClienteEditando(null)}
       />
@@ -193,7 +194,8 @@ export default function ClientesPage() {
             </h2>
             {termoAplicado && (
               <p className="mt-1 text-xs text-slate-500">
-                Resultado da busca por &quot;{termoAplicado}&quot;
+                Resultado da busca por &quot;
+                {termoAplicado}&quot;
               </p>
             )}
           </div>
@@ -206,7 +208,9 @@ export default function ClientesPage() {
               <Input
                 label="Pesquisar"
                 value={termo}
-                onChange={(event) => setTermo(event.target.value)}
+                onChange={(event) =>
+                  setTermo(event.target.value)
+                }
                 placeholder="Nome, e-mail ou CPF"
               />
             </div>
@@ -254,9 +258,9 @@ export default function ClientesPage() {
             : ""
         }
         confirmText="Excluir"
-        loading={excluindoId !== null}
+        loading={excluirAction.loading}
         onCancel={() => {
-          if (excluindoId === null) {
+          if (!excluirAction.loading) {
             setClienteParaExcluir(null);
           }
         }}

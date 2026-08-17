@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { FormError } from "@/components/ui/FormError";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import {
   produtoSchema,
   type ProdutoFormData,
@@ -15,6 +16,7 @@ import type { Produto } from "../types";
 
 type ProdutoFormProps = {
   produtoEditando: Produto | null;
+  salvando?: boolean;
   onSave: (dados: ProdutoFormData) => Promise<boolean>;
   onCancelEdit: () => void;
 };
@@ -30,6 +32,7 @@ const inputClass =
 
 export function ProdutoForm({
   produtoEditando,
+  salvando = false,
   onSave,
   onCancelEdit,
 }: ProdutoFormProps) {
@@ -49,7 +52,8 @@ export function ProdutoForm({
       reset({
         nome: produtoEditando.nome,
         preco: Number(produtoEditando.preco),
-        quantidadeEstoque: produtoEditando.quantidadeEstoque,
+        quantidadeEstoque:
+          produtoEditando.quantidadeEstoque,
       });
       return;
     }
@@ -70,11 +74,15 @@ export function ProdutoForm({
     onCancelEdit();
   }
 
+  const carregando = isSubmitting || salvando;
+
   return (
     <Card>
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
-          {produtoEditando ? "Editar produto" : "Novo produto"}
+          {produtoEditando
+            ? "Editar produto"
+            : "Novo produto"}
         </h2>
         <p className="mt-1 text-xs text-slate-500">
           Os campos são validados antes do envio ao backend.
@@ -87,7 +95,9 @@ export function ProdutoForm({
         className="mt-4 grid gap-4 md:grid-cols-3"
       >
         <div>
-          <FieldLabel htmlFor="produto-nome">Nome</FieldLabel>
+          <FieldLabel htmlFor="produto-nome">
+            Nome
+          </FieldLabel>
           <input
             id="produto-nome"
             maxLength={120}
@@ -101,7 +111,9 @@ export function ProdutoForm({
         </div>
 
         <div>
-          <FieldLabel htmlFor="produto-preco">Preço</FieldLabel>
+          <FieldLabel htmlFor="produto-preco">
+            Preço
+          </FieldLabel>
           <input
             id="produto-preco"
             type="number"
@@ -109,20 +121,26 @@ export function ProdutoForm({
             step="0.01"
             className={inputClass}
             aria-invalid={Boolean(errors.preco)}
-            {...register("preco", { valueAsNumber: true })}
+            {...register("preco", {
+              valueAsNumber: true,
+            })}
           />
           <FormError message={errors.preco?.message} />
         </div>
 
         <div>
-          <FieldLabel htmlFor="produto-estoque">Estoque</FieldLabel>
+          <FieldLabel htmlFor="produto-estoque">
+            Estoque
+          </FieldLabel>
           <input
             id="produto-estoque"
             type="number"
             min="0"
             step="1"
             className={inputClass}
-            aria-invalid={Boolean(errors.quantidadeEstoque)}
+            aria-invalid={Boolean(
+              errors.quantidadeEstoque
+            )}
             {...register("quantidadeEstoque", {
               valueAsNumber: true,
             })}
@@ -133,17 +151,25 @@ export function ProdutoForm({
         </div>
 
         <div className="flex flex-wrap gap-2 md:col-span-3">
-          <Button type="submit" loading={isSubmitting}>
+          <LoadingButton
+            type="submit"
+            loading={carregando}
+            loadingText={
+              produtoEditando
+                ? "Atualizando..."
+                : "Cadastrando..."
+            }
+          >
             {produtoEditando
               ? "Atualizar produto"
               : "Cadastrar produto"}
-          </Button>
+          </LoadingButton>
 
           {produtoEditando && (
             <Button
               type="button"
               variant="secondary"
-              disabled={isSubmitting}
+              disabled={carregando}
               onClick={cancelarEdicao}
             >
               Cancelar edição

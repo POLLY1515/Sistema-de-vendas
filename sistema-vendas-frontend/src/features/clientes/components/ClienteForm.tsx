@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { FormError } from "@/components/ui/FormError";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import {
   clienteSchema,
   type ClienteFormData,
@@ -15,6 +16,7 @@ import type { Cliente } from "../types";
 
 type ClienteFormProps = {
   clienteEditando: Cliente | null;
+  salvando?: boolean;
   onSave: (dados: ClienteFormData) => Promise<boolean>;
   onCancelEdit: () => void;
 };
@@ -35,6 +37,7 @@ function somenteNumeros(valor?: string | null) {
 
 export function ClienteForm({
   clienteEditando,
+  salvando = false,
   onSave,
   onCancelEdit,
 }: ClienteFormProps) {
@@ -55,7 +58,9 @@ export function ClienteForm({
         nome: clienteEditando.nome,
         email: clienteEditando.email,
         cpf: somenteNumeros(clienteEditando.cpf),
-        telefone: somenteNumeros(clienteEditando.telefone),
+        telefone: somenteNumeros(
+          clienteEditando.telefone
+        ),
       });
       return;
     }
@@ -84,11 +89,15 @@ export function ClienteForm({
     onCancelEdit();
   }
 
+  const carregando = isSubmitting || salvando;
+
   return (
     <Card>
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
-          {clienteEditando ? "Editar cliente" : "Novo cliente"}
+          {clienteEditando
+            ? "Editar cliente"
+            : "Novo cliente"}
         </h2>
         <p className="mt-1 text-xs text-slate-500">
           Corrija os campos destacados antes de enviar.
@@ -101,7 +110,9 @@ export function ClienteForm({
         className="mt-4 grid gap-4 md:grid-cols-2"
       >
         <div>
-          <FieldLabel htmlFor="cliente-nome">Nome</FieldLabel>
+          <FieldLabel htmlFor="cliente-nome">
+            Nome
+          </FieldLabel>
           <input
             id="cliente-nome"
             maxLength={120}
@@ -115,7 +126,9 @@ export function ClienteForm({
         </div>
 
         <div>
-          <FieldLabel htmlFor="cliente-email">E-mail</FieldLabel>
+          <FieldLabel htmlFor="cliente-email">
+            E-mail
+          </FieldLabel>
           <input
             id="cliente-email"
             type="email"
@@ -130,7 +143,9 @@ export function ClienteForm({
         </div>
 
         <div>
-          <FieldLabel htmlFor="cliente-cpf">CPF</FieldLabel>
+          <FieldLabel htmlFor="cliente-cpf">
+            CPF
+          </FieldLabel>
           <input
             id="cliente-cpf"
             inputMode="numeric"
@@ -158,21 +173,31 @@ export function ClienteForm({
             aria-invalid={Boolean(errors.telefone)}
             {...register("telefone")}
           />
-          <FormError message={errors.telefone?.message} />
+          <FormError
+            message={errors.telefone?.message}
+          />
         </div>
 
         <div className="flex flex-wrap gap-2 md:col-span-2">
-          <Button type="submit" loading={isSubmitting}>
+          <LoadingButton
+            type="submit"
+            loading={carregando}
+            loadingText={
+              clienteEditando
+                ? "Atualizando..."
+                : "Cadastrando..."
+            }
+          >
             {clienteEditando
               ? "Atualizar cliente"
               : "Cadastrar cliente"}
-          </Button>
+          </LoadingButton>
 
           {clienteEditando && (
             <Button
               type="button"
               variant="secondary"
-              disabled={isSubmitting}
+              disabled={carregando}
               onClick={cancelarEdicao}
             >
               Cancelar edição

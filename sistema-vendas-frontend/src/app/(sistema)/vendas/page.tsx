@@ -20,6 +20,8 @@ import type {
   PedidoLista,
   PedidoPage,
 } from "@/features/pedidos/types";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 
 const filtrosIniciais: PedidoFiltros = {
   status: "",
@@ -50,10 +52,12 @@ export default function VendasPage() {
     useState<PedidoLista | null>(null);
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingDetalhe, setLoadingDetalhe] = useState(false);
+  const [loadingDetalhe, setLoadingDetalhe] =
+    useState(false);
   const [cancelandoId, setCancelandoId] =
     useState<number | null>(null);
-  const [mensagem, setMensagem] = useState("");
+
+  const cancelarAction = useAsyncAction();
 
   const carregarPedidos = useCallback(async () => {
     try {
@@ -68,9 +72,10 @@ export default function VendasPage() {
       setDados(resposta);
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao carregar pedidos."
+        getErrorMessage(
+          error,
+          "Erro ao carregar pedidos."
+        )
       );
     } finally {
       setLoading(false);
@@ -94,7 +99,6 @@ export default function VendasPage() {
     }
 
     setErro("");
-    setMensagem("");
     setPedidoDetalhe(null);
     setPage(0);
     setFiltrosAplicados({
@@ -107,7 +111,6 @@ export default function VendasPage() {
     setFiltros(filtrosIniciais);
     setFiltrosAplicados(filtrosIniciais);
     setPedidoDetalhe(null);
-    setMensagem("");
     setErro("");
     setPage(0);
   }
@@ -121,9 +124,10 @@ export default function VendasPage() {
       setPedidoDetalhe(detalhe);
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao carregar detalhes do pedido."
+        getErrorMessage(
+          error,
+          "Erro ao carregar detalhes do pedido."
+        )
       );
     } finally {
       setLoadingDetalhe(false);
@@ -133,27 +137,27 @@ export default function VendasPage() {
   async function confirmarCancelamento() {
     if (!pedidoParaCancelar) return;
 
-    try {
-      setCancelandoId(pedidoParaCancelar.id);
-      setErro("");
-      setMensagem("");
+    const pedido = pedidoParaCancelar;
+    setCancelandoId(pedido.id);
 
-      await cancelarPedido(pedidoParaCancelar.id);
+    const resultado = await cancelarAction.execute(
+      async () => {
+        await cancelarPedido(pedido.id);
+        await carregarPedidos();
+        return pedido;
+      },
+      {
+        successMessage: (item) =>
+          `Pedido #${item.id} cancelado com sucesso.`,
+        errorMessage: "Não foi possível cancelar o pedido.",
+      }
+    );
 
-      setMensagem(
-        `Pedido #${pedidoParaCancelar.id} cancelado com sucesso.`
-      );
+    setCancelandoId(null);
+
+    if (resultado.ok) {
       setPedidoParaCancelar(null);
       setPedidoDetalhe(null);
-      await carregarPedidos();
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao cancelar pedido."
-      );
-    } finally {
-      setCancelandoId(null);
     }
   }
 
@@ -165,21 +169,14 @@ export default function VendasPage() {
         actions={
           <span className="text-sm text-slate-500">
             {dados.totalElements}{" "}
-            {dados.totalElements === 1 ? "pedido" : "pedidos"}
+            {dados.totalElements === 1
+              ? "pedido"
+              : "pedidos"}
           </span>
         }
       />
 
       <ErrorAlert message={erro} />
-
-      {mensagem && (
-        <div
-          role="status"
-          className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
-        >
-          {mensagem}
-        </div>
-      )}
 
       <PedidoFilters
         filtros={filtros}
@@ -223,13 +220,15 @@ export default function VendasPage() {
             : ""
         }
         confirmText="Cancelar pedido"
-        loading={cancelandoId !== null}
+        loading={cancelarAction.loading}
         onCancel={() => {
-          if (cancelandoId === null) {
+          if (!cancelarAction.loading) {
             setPedidoParaCancelar(null);
           }
         }}
-        onConfirm={() => void confirmarCancelamento()}
+        onConfirm={() =>
+          void confirmarCancelamento()
+        }
       />
     </main>
   );

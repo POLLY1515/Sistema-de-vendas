@@ -24,7 +24,8 @@ import {
   excluirProduto,
 } from "@/features/produtos/services/produtoService";
 import type { Produto } from "@/features/produtos/types";
-import { obterMensagemErro } from "@/lib/apiError";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 
 export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -41,7 +42,9 @@ export default function ProdutosPage() {
   const [excluindoId, setExcluindoId] =
     useState<number | null>(null);
   const [erro, setErro] = useState("");
-  const [mensagem, setMensagem] = useState("");
+
+  const salvarAction = useAsyncAction();
+  const excluirAction = useAsyncAction();
 
   const carregarProdutos = useCallback(async () => {
     try {
@@ -59,7 +62,7 @@ export default function ProdutosPage() {
       setTotalElementos(resultado.totalElements);
     } catch (error) {
       setErro(
-        obterMensagemErro(
+        getErrorMessage(
           error,
           "Não foi possível carregar os produtos."
         )
@@ -76,70 +79,74 @@ export default function ProdutosPage() {
   function prepararEdicao(produto: Produto) {
     setProdutoEditando(produto);
     setErro("");
-    setMensagem("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function salvarProduto(
     dados: ProdutoFormData
   ): Promise<boolean> {
-    try {
-      setErro("");
-      setMensagem("");
+    const editando = Boolean(produtoEditando);
 
-      if (produtoEditando) {
-        await atualizarProduto(produtoEditando.id, dados);
-        setProdutoEditando(null);
-        setMensagem("Produto atualizado com sucesso.");
-      } else {
-        await criarProduto(dados);
-        setMensagem("Produto cadastrado com sucesso.");
+    const resultado = await salvarAction.execute(
+      async () => {
+        if (produtoEditando) {
+          await atualizarProduto(produtoEditando.id, dados);
+        } else {
+          await criarProduto(dados);
+        }
+
+        if (pagina !== 0) {
+          setPagina(0);
+        } else {
+          await carregarProdutos();
+        }
+
+        return true;
+      },
+      {
+        successMessage: editando
+          ? "Produto atualizado com sucesso."
+          : "Produto cadastrado com sucesso.",
+        errorMessage: "Não foi possível salvar o produto.",
       }
+    );
 
-      if (pagina !== 0) {
-        setPagina(0);
-      } else {
-        await carregarProdutos();
-      }
-
-      return true;
-    } catch (error) {
-      setErro(
-        obterMensagemErro(
-          error,
-          "Não foi possível salvar o produto."
-        )
-      );
-      return false;
+    if (resultado.ok && editando) {
+      setProdutoEditando(null);
     }
+
+    return resultado.ok;
   }
 
   async function confirmarExclusao() {
     if (!produtoParaExcluir) return;
 
-    try {
-      setExcluindoId(produtoParaExcluir.id);
-      setErro("");
-      setMensagem("");
+    const produto = produtoParaExcluir;
+    setExcluindoId(produto.id);
 
-      await excluirProduto(produtoParaExcluir.id);
-      setMensagem("Produto excluído com sucesso.");
-      setProdutoParaExcluir(null);
+    const resultado = await excluirAction.execute(
+      async () => {
+        await excluirProduto(produto.id);
 
-      if (produtos.length === 1 && pagina > 0) {
-        setPagina((valor) => valor - 1);
-      } else {
-        await carregarProdutos();
+        if (produtos.length === 1 && pagina > 0) {
+          setPagina((valor) => valor - 1);
+        } else {
+          await carregarProdutos();
+        }
+
+        return produto;
+      },
+      {
+        successMessage: (item) =>
+          `Produto "${item.nome}" excluído com sucesso.`,
+        errorMessage: "Não foi possível excluir o produto.",
       }
-    } catch (error) {
-      setErro(
-        obterMensagemErro(
-          error,
-          "Não foi possível excluir o produto."
-        )
-      );
-    } finally {
-      setExcluindoId(null);
+    );
+
+    setExcluindoId(null);
+
+    if (resultado.ok) {
+      setProdutoParaExcluir(null);
     }
   }
 
@@ -163,24 +170,18 @@ export default function ProdutosPage() {
         actions={
           <span className="text-sm text-slate-500">
             {totalElementos}{" "}
-            {totalElementos === 1 ? "produto" : "produtos"}
+            {totalElementos === 1
+              ? "produto"
+              : "produtos"}
           </span>
         }
       />
 
       <ErrorAlert message={erro} />
 
-      {mensagem && (
-        <div
-          role="status"
-          className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
-        >
-          {mensagem}
-        </div>
-      )}
-
       <ProdutoForm
         produtoEditando={produtoEditando}
+        salvando={salvarAction.loading}
         onSave={salvarProduto}
         onCancelEdit={() => setProdutoEditando(null)}
       />
@@ -193,7 +194,8 @@ export default function ProdutosPage() {
             </h2>
             {buscaAplicada && (
               <p className="mt-1 text-xs text-slate-500">
-                Resultado da busca por &quot;{buscaAplicada}&quot;
+                Resultado da busca por &quot;
+                {buscaAplicada}&quot;
               </p>
             )}
           </div>
@@ -206,7 +208,9 @@ export default function ProdutosPage() {
               <Input
                 label="Pesquisar"
                 value={busca}
-                onChange={(event) => setBusca(event.target.value)}
+                onChange={(event) =>
+                  setBusca(event.target.value)
+                }
                 placeholder="Pesquisar por nome"
               />
             </div>
@@ -254,9 +258,9 @@ export default function ProdutosPage() {
             : ""
         }
         confirmText="Excluir"
-        loading={excluindoId !== null}
+        loading={excluirAction.loading}
         onCancel={() => {
-          if (excluindoId === null) {
+          if (!excluirAction.loading) {
             setProdutoParaExcluir(null);
           }
         }}

@@ -10,19 +10,21 @@ import type {
   ClienteResumo,
   ProdutoResumo,
 } from "@/features/pedidos/types";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 import { buscarClientes } from "@/services/clienteService";
 import { listarProdutos } from "@/services/produtoService";
 import { formatarMoeda } from "@/utils/formatters";
 
 export default function NovaVendaPage() {
   const pedido = useNovoPedido();
+  const finalizarAction = useAsyncAction();
 
   const [clientes, setClientes] = useState<ClienteResumo[]>([]);
   const [produtos, setProdutos] = useState<ProdutoResumo[]>([]);
   const [erro, setErro] = useState("");
-  const [sucesso, setSucesso] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [carregandoDados, setCarregandoDados] = useState(true);
+  const [carregandoDados, setCarregandoDados] =
+    useState(true);
 
   const carregarDados = useCallback(async () => {
     try {
@@ -52,14 +54,16 @@ export default function NovaVendaPage() {
             id: produto.id,
             nome: produto.nome,
             preco: Number(produto.preco),
-            quantidadeEstoque: produto.quantidadeEstoque,
+            quantidadeEstoque:
+              produto.quantidadeEstoque,
           }))
       );
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao carregar clientes e produtos."
+        getErrorMessage(
+          error,
+          "Erro ao carregar clientes e produtos."
+        )
       );
     } finally {
       setCarregandoDados(false);
@@ -76,7 +80,6 @@ export default function NovaVendaPage() {
     );
 
     try {
-      setSucesso("");
       setErro("");
 
       if (!produto) {
@@ -86,38 +89,39 @@ export default function NovaVendaPage() {
       pedido.adicionarProduto(produto);
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao adicionar produto."
+        getErrorMessage(
+          error,
+          "Erro ao adicionar produto."
+        )
       );
     }
   }
 
   async function salvarPedido() {
-    try {
-      setLoading(true);
+    const totalAntesDeSalvar = pedido.total;
+
+    const resultado = await finalizarAction.execute(
+      async () => {
+        const request = pedido.montarRequest();
+        const criado = await criarPedido(request);
+
+        pedido.limparPedido();
+        await carregarDados();
+
+        return criado;
+      },
+      {
+        successMessage: (criado) =>
+          `Venda #${criado.id} registrada com sucesso. Total: ${formatarMoeda(
+            criado.total || totalAntesDeSalvar
+          )}`,
+        errorMessage:
+          "Não foi possível finalizar a venda. Verifique estoque e dados do pedido.",
+      }
+    );
+
+    if (resultado.ok) {
       setErro("");
-      setSucesso("");
-
-      const request = pedido.montarRequest();
-      const criado = await criarPedido(request);
-
-      pedido.limparPedido();
-      setSucesso(
-        `Venda #${criado.id} registrada com sucesso. Total: ${formatarMoeda(
-          criado.total || pedido.total
-        )}`
-      );
-
-      await carregarDados();
-    } catch (error) {
-      setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao salvar pedido."
-      );
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -130,15 +134,6 @@ export default function NovaVendaPage() {
 
       <ErrorAlert message={erro} />
 
-      {sucesso && (
-        <div
-          role="status"
-          className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
-        >
-          {sucesso}
-        </div>
-      )}
-
       <NovoPedidoForm
         clientes={clientes}
         produtos={produtos}
@@ -147,7 +142,7 @@ export default function NovaVendaPage() {
         quantidade={pedido.quantidade}
         total={pedido.total}
         itens={pedido.itens}
-        loading={loading}
+        loading={finalizarAction.loading}
         carregandoDados={carregandoDados}
         onClienteChange={pedido.setClienteId}
         onProdutoChange={pedido.setProdutoId}

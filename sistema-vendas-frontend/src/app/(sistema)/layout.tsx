@@ -1,10 +1,17 @@
-import { AppLayout } from '@/components/AppLayout'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { AppLayout } from "@/components/AppLayout";
+import { FeedbackProvider } from "@/components/feedback/FeedbackProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-export default function SistemaLayout({ children }: { children: React.ReactNode }) {
+export default function SistemaLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ProtectedRoute>
-      <AppLayout>{children}</AppLayout>
+      <FeedbackProvider>
+        <AppLayout>{children}</AppLayout>
+      </FeedbackProvider>
     </ProtectedRoute>
-  )
+  );
 }
