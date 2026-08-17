@@ -24,6 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/clientes">Clientes</Link>
           <Link href="/vendas/nova">Nova venda</Link>
           <Link href="/vendas">Vendas</Link>
+          <Link href="/relatorios/vendas">Relatorios</Link>
         </nav>
       </aside>
 
