@@ -16,31 +16,30 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { Pagination } from "@/components/ui/Pagination";
 import { ProdutoForm } from "@/features/produtos/components/ProdutoForm";
 import { ProdutoTable } from "@/features/produtos/components/ProdutoTable";
+import type { ProdutoFormData } from "@/features/produtos/produtoSchema";
 import {
   atualizarProduto,
   buscarProdutos,
   criarProduto,
   excluirProduto,
 } from "@/features/produtos/services/produtoService";
-import {
-  produtoInicial,
-  type Produto,
-  type ProdutoRequest,
-} from "@/features/produtos/types";
+import type { Produto } from "@/features/produtos/types";
+import { obterMensagemErro } from "@/lib/apiError";
 
 export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [form, setForm] = useState<ProdutoRequest>(produtoInicial);
-  const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
-  const [produtoParaExcluir, setProdutoParaExcluir] = useState<Produto | null>(null);
+  const [produtoEditando, setProdutoEditando] =
+    useState<Produto | null>(null);
+  const [produtoParaExcluir, setProdutoParaExcluir] =
+    useState<Produto | null>(null);
   const [busca, setBusca] = useState("");
   const [buscaAplicada, setBuscaAplicada] = useState("");
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
   const [carregando, setCarregando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [excluindoId, setExcluindoId] =
+    useState<number | null>(null);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
@@ -49,16 +48,21 @@ export default function ProdutosPage() {
       setCarregando(true);
       setErro("");
 
-      const resultado = await buscarProdutos(pagina, 10, buscaAplicada);
+      const resultado = await buscarProdutos(
+        pagina,
+        10,
+        buscaAplicada
+      );
 
       setProdutos(resultado.content);
       setTotalPaginas(resultado.totalPages);
       setTotalElementos(resultado.totalElements);
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar os produtos."
+        obterMensagemErro(
+          error,
+          "Não foi possível carregar os produtos."
+        )
       );
     } finally {
       setCarregando(false);
@@ -69,85 +73,44 @@ export default function ProdutosPage() {
     void carregarProdutos();
   }, [carregarProdutos]);
 
-  function alterarCampo(campo: keyof ProdutoRequest, valor: string) {
-    setForm((estadoAtual) => ({
-      ...estadoAtual,
-      [campo]:
-        campo === "preco" || campo === "quantidadeEstoque"
-          ? Number(valor)
-          : valor,
-    }));
-  }
-
-  function limparFormulario() {
-    setForm(produtoInicial);
-    setProdutoEditando(null);
-  }
-
   function prepararEdicao(produto: Produto) {
     setProdutoEditando(produto);
-    setForm({
-      nome: produto.nome,
-      preco: produto.preco,
-      quantidadeEstoque: produto.quantidadeEstoque,
-    });
     setErro("");
     setMensagem("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function salvarProduto(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!form.nome.trim()) {
-      setErro("Informe o nome do produto.");
-      return;
-    }
-
-    if (form.preco <= 0) {
-      setErro("O preço deve ser maior que zero.");
-      return;
-    }
-
-    if (form.quantidadeEstoque < 0) {
-      setErro("O estoque não pode ser negativo.");
-      return;
-    }
-
+  async function salvarProduto(
+    dados: ProdutoFormData
+  ): Promise<boolean> {
     try {
-      setSalvando(true);
       setErro("");
       setMensagem("");
 
-      const dados: ProdutoRequest = {
-        nome: form.nome.trim(),
-        preco: form.preco,
-        quantidadeEstoque: form.quantidadeEstoque,
-      };
-
       if (produtoEditando) {
         await atualizarProduto(produtoEditando.id, dados);
+        setProdutoEditando(null);
         setMensagem("Produto atualizado com sucesso.");
       } else {
         await criarProduto(dados);
         setMensagem("Produto cadastrado com sucesso.");
       }
 
-      limparFormulario();
-
       if (pagina !== 0) {
         setPagina(0);
       } else {
         await carregarProdutos();
       }
+
+      return true;
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível salvar o produto."
+        obterMensagemErro(
+          error,
+          "Não foi possível salvar o produto."
+        )
       );
-    } finally {
-      setSalvando(false);
+      return false;
     }
   }
 
@@ -170,9 +133,10 @@ export default function ProdutosPage() {
       }
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível excluir o produto."
+        obterMensagemErro(
+          error,
+          "Não foi possível excluir o produto."
+        )
       );
     } finally {
       setExcluindoId(null);
@@ -198,7 +162,8 @@ export default function ProdutosPage() {
         description="Cadastre, edite e acompanhe o estoque dos produtos disponíveis para venda."
         actions={
           <span className="text-sm text-slate-500">
-            {totalElementos} {totalElementos === 1 ? "produto" : "produtos"}
+            {totalElementos}{" "}
+            {totalElementos === 1 ? "produto" : "produtos"}
           </span>
         }
       />
@@ -215,12 +180,9 @@ export default function ProdutosPage() {
       )}
 
       <ProdutoForm
-        form={form}
-        editando={Boolean(produtoEditando)}
-        salvando={salvando}
-        onChange={alterarCampo}
-        onSubmit={salvarProduto}
-        onCancelEdit={limparFormulario}
+        produtoEditando={produtoEditando}
+        onSave={salvarProduto}
+        onCancelEdit={() => setProdutoEditando(null)}
       />
 
       <Card>
@@ -254,7 +216,11 @@ export default function ProdutosPage() {
             </Button>
 
             {(busca || buscaAplicada) && (
-              <Button type="button" variant="ghost" onClick={limparBusca}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={limparBusca}
+              >
                 Limpar
               </Button>
             )}

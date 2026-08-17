@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Pagination } from "@/components/ui/Pagination";
 import { ClienteForm } from "@/features/clientes/components/ClienteForm";
+import type { ClienteFormData } from "@/features/clientes/clienteSchema";
 import { ClienteTable } from "@/features/clientes/components/ClienteTable";
 import {
   atualizarCliente,
@@ -22,29 +23,23 @@ import {
   criarCliente,
   excluirCliente,
 } from "@/features/clientes/services/clienteService";
-import {
-  clienteInicial,
-  type Cliente,
-  type ClienteRequest,
-} from "@/features/clientes/types";
-
-function somenteNumeros(valor: string) {
-  return valor.replace(/\D/g, "");
-}
+import type { Cliente } from "@/features/clientes/types";
+import { obterMensagemErro } from "@/lib/apiError";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [form, setForm] = useState<ClienteRequest>(clienteInicial);
-  const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
-  const [clienteParaExcluir, setClienteParaExcluir] = useState<Cliente | null>(null);
+  const [clienteEditando, setClienteEditando] =
+    useState<Cliente | null>(null);
+  const [clienteParaExcluir, setClienteParaExcluir] =
+    useState<Cliente | null>(null);
   const [termo, setTermo] = useState("");
   const [termoAplicado, setTermoAplicado] = useState("");
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(0);
   const [totalElementos, setTotalElementos] = useState(0);
   const [carregando, setCarregando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [excluindoId, setExcluindoId] =
+    useState<number | null>(null);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
@@ -64,9 +59,10 @@ export default function ClientesPage() {
       setTotalElementos(resposta.totalElements);
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar os clientes."
+        obterMensagemErro(
+          error,
+          "Não foi possível carregar os clientes."
+        )
       );
     } finally {
       setCarregando(false);
@@ -77,101 +73,44 @@ export default function ClientesPage() {
     void carregarClientes();
   }, [carregarClientes]);
 
-  function alterarCampo(campo: keyof ClienteRequest, valor: string) {
-    const novoValor =
-      campo === "cpf"
-        ? somenteNumeros(valor).slice(0, 11)
-        : campo === "telefone"
-          ? somenteNumeros(valor).slice(0, 11)
-          : valor;
-
-    setForm((estadoAtual) => ({
-      ...estadoAtual,
-      [campo]: novoValor,
-    }));
-  }
-
-  function limparFormulario() {
-    setForm(clienteInicial);
-    setClienteEditando(null);
-  }
-
   function editarCliente(cliente: Cliente) {
     setClienteEditando(cliente);
-    setForm({
-      nome: cliente.nome,
-      email: cliente.email,
-      cpf: somenteNumeros(cliente.cpf),
-      telefone: somenteNumeros(cliente.telefone ?? ""),
-    });
     setMensagem("");
     setErro("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function salvarCliente(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const nome = form.nome.trim();
-    const email = form.email.trim().toLowerCase();
-    const cpf = somenteNumeros(form.cpf);
-    const telefone = somenteNumeros(form.telefone);
-
-    if (nome.length < 3) {
-      setErro("Informe um nome com pelo menos 3 caracteres.");
-      return;
-    }
-
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setErro("Informe um e-mail válido.");
-      return;
-    }
-
-    if (cpf.length !== 11) {
-      setErro("O CPF deve conter exatamente 11 números.");
-      return;
-    }
-
-    if (telefone && !/^\d{10,11}$/.test(telefone)) {
-      setErro("O telefone deve conter 10 ou 11 números.");
-      return;
-    }
-
-    const dados: ClienteRequest = {
-      nome,
-      email,
-      cpf,
-      telefone,
-    };
-
+  async function salvarCliente(
+    dados: ClienteFormData
+  ): Promise<boolean> {
     try {
-      setSalvando(true);
       setErro("");
       setMensagem("");
 
       if (clienteEditando) {
         await atualizarCliente(clienteEditando.id, dados);
+        setClienteEditando(null);
         setMensagem("Cliente atualizado com sucesso.");
       } else {
         await criarCliente(dados);
         setMensagem("Cliente cadastrado com sucesso.");
       }
 
-      limparFormulario();
-
       if (pagina !== 0) {
         setPagina(0);
       } else {
         await carregarClientes();
       }
+
+      return true;
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível salvar o cliente."
+        obterMensagemErro(
+          error,
+          "Não foi possível salvar o cliente."
+        )
       );
-    } finally {
-      setSalvando(false);
+      return false;
     }
   }
 
@@ -194,9 +133,10 @@ export default function ClientesPage() {
       }
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível excluir o cliente."
+        obterMensagemErro(
+          error,
+          "Não foi possível excluir o cliente."
+        )
       );
     } finally {
       setExcluindoId(null);
@@ -222,7 +162,8 @@ export default function ClientesPage() {
         description="Cadastre, edite, pesquise e acompanhe os clientes do sistema."
         actions={
           <span className="text-sm text-slate-500">
-            {totalElementos} {totalElementos === 1 ? "cliente" : "clientes"}
+            {totalElementos}{" "}
+            {totalElementos === 1 ? "cliente" : "clientes"}
           </span>
         }
       />
@@ -239,12 +180,9 @@ export default function ClientesPage() {
       )}
 
       <ClienteForm
-        form={form}
-        editando={Boolean(clienteEditando)}
-        salvando={salvando}
-        onChange={alterarCampo}
-        onSubmit={salvarCliente}
-        onCancelEdit={limparFormulario}
+        clienteEditando={clienteEditando}
+        onSave={salvarCliente}
+        onCancelEdit={() => setClienteEditando(null)}
       />
 
       <Card>
@@ -278,7 +216,11 @@ export default function ClientesPage() {
             </Button>
 
             {(termo || termoAplicado) && (
-              <Button type="button" variant="ghost" onClick={limparBusca}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={limparBusca}
+              >
                 Limpar
               </Button>
             )}
