@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useCarrinhoResumo } from "./useCarrinhoResumo";
 import type {
   CarrinhoItem,
   CriarPedidoRequest,
@@ -13,16 +14,16 @@ export function useNovoPedido() {
   const [quantidade, setQuantidade] = useState("1");
   const [itens, setItens] = useState<CarrinhoItem[]>([]);
 
-  const total = useMemo(
-    () => itens.reduce((soma, item) => soma + item.subtotal, 0),
-    [itens]
-  );
+  const resumo = useCarrinhoResumo(itens);
+  const total = resumo.valorTotal;
 
   function adicionarProduto(produto: ProdutoResumo) {
     const qtd = Number(quantidade);
 
     if (!Number.isInteger(qtd) || qtd <= 0) {
-      throw new Error("Informe uma quantidade inteira maior que zero.");
+      throw new Error(
+        "Informe uma quantidade inteira maior que zero."
+      );
     }
 
     if (qtd > produto.quantidadeEstoque) {
@@ -36,9 +37,12 @@ export function useNovoPedido() {
     );
 
     if (itemExistente) {
-      const novaQuantidade = itemExistente.quantidade + qtd;
+      const novaQuantidade =
+        itemExistente.quantidade + qtd;
 
-      if (novaQuantidade > produto.quantidadeEstoque) {
+      if (
+        novaQuantidade > produto.quantidadeEstoque
+      ) {
         throw new Error(
           `Quantidade total maior que o estoque disponível (${produto.quantidadeEstoque}).`
         );
@@ -50,7 +54,8 @@ export function useNovoPedido() {
             ? {
                 ...item,
                 quantidade: novaQuantidade,
-                subtotal: novaQuantidade * item.precoUnitario,
+                subtotal:
+                  novaQuantidade * item.precoUnitario,
               }
             : item
         )
@@ -63,7 +68,8 @@ export function useNovoPedido() {
           nomeProduto: produto.nome,
           precoUnitario: Number(produto.preco),
           quantidade: qtd,
-          estoqueDisponivel: produto.quantidadeEstoque,
+          estoqueDisponivel:
+            produto.quantidadeEstoque,
           subtotal: qtd * Number(produto.preco),
         },
       ]);
@@ -73,10 +79,13 @@ export function useNovoPedido() {
     setQuantidade("1");
   }
 
-  function removerProduto(produtoIdParaRemover: number) {
+  function removerProduto(
+    produtoIdParaRemover: number
+  ) {
     setItens((atuais) =>
       atuais.filter(
-        (item) => item.produtoId !== produtoIdParaRemover
+        (item) =>
+          item.produtoId !== produtoIdParaRemover
       )
     );
   }
@@ -94,7 +103,9 @@ export function useNovoPedido() {
     }
 
     if (itens.length === 0) {
-      throw new Error("Adicione pelo menos um produto.");
+      throw new Error(
+        "Adicione pelo menos um produto."
+      );
     }
 
     return {
@@ -115,6 +126,7 @@ export function useNovoPedido() {
     setQuantidade,
     itens,
     total,
+    resumo,
     adicionarProduto,
     removerProduto,
     limparPedido,

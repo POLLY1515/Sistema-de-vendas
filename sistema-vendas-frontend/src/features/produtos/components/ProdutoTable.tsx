@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,72 +21,87 @@ function estoqueBadge(quantidade: number) {
         : "bg-emerald-50 text-emerald-700";
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classe}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classe}`}
+    >
       {quantidade}
     </span>
   );
 }
 
-export function ProdutoTable({
-  produtos,
-  excluindoId,
-  onEdit,
-  onDelete,
-}: ProdutoTableProps) {
-  if (produtos.length === 0) {
+export const ProdutoTable = memo(
+  function ProdutoTable({
+    produtos,
+    excluindoId,
+    onEdit,
+    onDelete,
+  }: ProdutoTableProps) {
+    if (produtos.length === 0) {
+      return (
+        <EmptyState
+          title="Nenhum produto encontrado"
+          description="Cadastre um novo produto ou ajuste a pesquisa."
+        />
+      );
+    }
+
     return (
-      <EmptyState
-        title="Nenhum produto encontrado"
-        description="Cadastre um novo produto ou ajuste a pesquisa."
+      <DataTable
+        data={produtos}
+        keyExtractor={(produto) => produto.id}
+        columns={[
+          {
+            header: "ID",
+            render: (produto) => `#${produto.id}`,
+          },
+          {
+            header: "Nome",
+            render: (produto) => (
+              <span className="font-medium text-slate-900">
+                {produto.nome}
+              </span>
+            ),
+          },
+          {
+            header: "Preço",
+            render: (produto) =>
+              formatarMoeda(produto.preco),
+          },
+          {
+            header: "Estoque",
+            render: (produto) =>
+              estoqueBadge(
+                produto.quantidadeEstoque
+              ),
+          },
+          {
+            header: "Ações",
+            render: (produto) => (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => onEdit(produto)}
+                  disabled={
+                    excluindoId === produto.id
+                  }
+                >
+                  Editar
+                </Button>
+
+                <Button
+                  variant="danger"
+                  onClick={() => onDelete(produto)}
+                  loading={
+                    excluindoId === produto.id
+                  }
+                >
+                  Excluir
+                </Button>
+              </div>
+            ),
+          },
+        ]}
       />
     );
   }
-
-  return (
-    <DataTable
-      data={produtos}
-      keyExtractor={(produto) => produto.id}
-      columns={[
-        {
-          header: "ID",
-          render: (produto) => `#${produto.id}`,
-        },
-        {
-          header: "Nome",
-          render: (produto) => (
-            <span className="font-medium text-slate-900">{produto.nome}</span>
-          ),
-        },
-        {
-          header: "Preço",
-          render: (produto) => formatarMoeda(produto.preco),
-        },
-        {
-          header: "Estoque",
-          render: (produto) => estoqueBadge(produto.quantidadeEstoque),
-        },
-        {
-          header: "Ações",
-          render: (produto) => (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => onEdit(produto)}
-                disabled={excluindoId === produto.id}
-              >
-                Editar
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => onDelete(produto)}
-                loading={excluindoId === produto.id}
-              >
-                Excluir
-              </Button>
-            </div>
-          ),
-        },
-      ]}
-    />
-  );
-}
+);

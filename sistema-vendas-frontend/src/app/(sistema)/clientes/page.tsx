@@ -25,26 +25,44 @@ import {
 } from "@/features/clientes/services/clienteService";
 import type { Cliente } from "@/features/clientes/types";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { useDebounce } from "@/hooks/useDebounce";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] =
+    useState<Cliente[]>([]);
   const [clienteEditando, setClienteEditando] =
     useState<Cliente | null>(null);
   const [clienteParaExcluir, setClienteParaExcluir] =
     useState<Cliente | null>(null);
   const [termo, setTermo] = useState("");
-  const [termoAplicado, setTermoAplicado] = useState("");
+  const [termoAplicado, setTermoAplicado] =
+    useState("");
   const [pagina, setPagina] = useState(0);
-  const [totalPaginas, setTotalPaginas] = useState(0);
-  const [totalElementos, setTotalElementos] = useState(0);
-  const [carregando, setCarregando] = useState(false);
+  const [totalPaginas, setTotalPaginas] =
+    useState(0);
+  const [totalElementos, setTotalElementos] =
+    useState(0);
+  const [carregando, setCarregando] =
+    useState(false);
   const [excluindoId, setExcluindoId] =
     useState<number | null>(null);
   const [erro, setErro] = useState("");
 
+  const termoDebounced = useDebounce(termo, 500);
   const salvarAction = useAsyncAction();
   const excluirAction = useAsyncAction();
+
+  useEffect(() => {
+    const valor = termoDebounced.trim();
+
+    if (valor === termoAplicado) {
+      return;
+    }
+
+    setPagina(0);
+    setTermoAplicado(valor);
+  }, [termoDebounced, termoAplicado]);
 
   const carregarClientes = useCallback(async () => {
     try {
@@ -76,11 +94,24 @@ export default function ClientesPage() {
     void carregarClientes();
   }, [carregarClientes]);
 
-  function editarCliente(cliente: Cliente) {
-    setClienteEditando(cliente);
-    setErro("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  const editarCliente = useCallback(
+    (cliente: Cliente) => {
+      setClienteEditando(cliente);
+      setErro("");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    },
+    []
+  );
+
+  const prepararExclusao = useCallback(
+    (cliente: Cliente) => {
+      setClienteParaExcluir(cliente);
+    },
+    []
+  );
 
   async function salvarCliente(
     dados: ClienteFormData
@@ -90,7 +121,10 @@ export default function ClientesPage() {
     const resultado = await salvarAction.execute(
       async () => {
         if (clienteEditando) {
-          await atualizarCliente(clienteEditando.id, dados);
+          await atualizarCliente(
+            clienteEditando.id,
+            dados
+          );
         } else {
           await criarCliente(dados);
         }
@@ -107,7 +141,8 @@ export default function ClientesPage() {
         successMessage: editando
           ? "Cliente atualizado com sucesso."
           : "Cliente cadastrado com sucesso.",
-        errorMessage: "Não foi possível salvar o cliente.",
+        errorMessage:
+          "Não foi possível salvar o cliente.",
       }
     );
 
@@ -128,7 +163,10 @@ export default function ClientesPage() {
       async () => {
         await excluirCliente(cliente.id);
 
-        if (clientes.length === 1 && pagina > 0) {
+        if (
+          clientes.length === 1 &&
+          pagina > 0
+        ) {
           setPagina((valor) => valor - 1);
         } else {
           await carregarClientes();
@@ -139,7 +177,8 @@ export default function ClientesPage() {
       {
         successMessage: (item) =>
           `Cliente "${item.nome}" excluído com sucesso.`,
-        errorMessage: "Não foi possível excluir o cliente.",
+        errorMessage:
+          "Não foi possível excluir o cliente.",
       }
     );
 
@@ -150,7 +189,9 @@ export default function ClientesPage() {
     }
   }
 
-  function pesquisar(event: FormEvent<HTMLFormElement>) {
+  function pesquisar(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
     setPagina(0);
     setTermoAplicado(termo.trim());
@@ -183,7 +224,9 @@ export default function ClientesPage() {
         clienteEditando={clienteEditando}
         salvando={salvarAction.loading}
         onSave={salvarCliente}
-        onCancelEdit={() => setClienteEditando(null)}
+        onCancelEdit={() =>
+          setClienteEditando(null)
+        }
       />
 
       <Card>
@@ -192,12 +235,10 @@ export default function ClientesPage() {
             <h2 className="text-lg font-semibold text-slate-900">
               Lista de clientes
             </h2>
-            {termoAplicado && (
-              <p className="mt-1 text-xs text-slate-500">
-                Resultado da busca por &quot;
-                {termoAplicado}&quot;
-              </p>
-            )}
+            <p className="mt-1 text-xs text-slate-500">
+              A busca é aplicada automaticamente após
+              500 ms sem digitação.
+            </p>
           </div>
 
           <form
@@ -215,8 +256,11 @@ export default function ClientesPage() {
               />
             </div>
 
-            <Button type="submit" variant="secondary">
-              Buscar
+            <Button
+              type="submit"
+              variant="secondary"
+            >
+              Buscar agora
             </Button>
 
             {(termo || termoAplicado) && (
@@ -238,7 +282,7 @@ export default function ClientesPage() {
             clientes={clientes}
             excluindoId={excluindoId}
             onEdit={editarCliente}
-            onDelete={setClienteParaExcluir}
+            onDelete={prepararExclusao}
           />
         )}
 
@@ -264,7 +308,9 @@ export default function ClientesPage() {
             setClienteParaExcluir(null);
           }
         }}
-        onConfirm={() => void confirmarExclusao()}
+        onConfirm={() =>
+          void confirmarExclusao()
+        }
       />
     </main>
   );

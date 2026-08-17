@@ -25,6 +25,7 @@ import {
 } from "@/features/produtos/services/produtoService";
 import type { Produto } from "@/features/produtos/types";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { useDebounce } from "@/hooks/useDebounce";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 
 export default function ProdutosPage() {
@@ -43,8 +44,20 @@ export default function ProdutosPage() {
     useState<number | null>(null);
   const [erro, setErro] = useState("");
 
+  const buscaDebounced = useDebounce(busca, 500);
   const salvarAction = useAsyncAction();
   const excluirAction = useAsyncAction();
+
+  useEffect(() => {
+    const valor = buscaDebounced.trim();
+
+    if (valor === buscaAplicada) {
+      return;
+    }
+
+    setPagina(0);
+    setBuscaAplicada(valor);
+  }, [buscaDebounced, buscaAplicada]);
 
   const carregarProdutos = useCallback(async () => {
     try {
@@ -76,11 +89,24 @@ export default function ProdutosPage() {
     void carregarProdutos();
   }, [carregarProdutos]);
 
-  function prepararEdicao(produto: Produto) {
-    setProdutoEditando(produto);
-    setErro("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  const prepararEdicao = useCallback(
+    (produto: Produto) => {
+      setProdutoEditando(produto);
+      setErro("");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    },
+    []
+  );
+
+  const prepararExclusao = useCallback(
+    (produto: Produto) => {
+      setProdutoParaExcluir(produto);
+    },
+    []
+  );
 
   async function salvarProduto(
     dados: ProdutoFormData
@@ -90,7 +116,10 @@ export default function ProdutosPage() {
     const resultado = await salvarAction.execute(
       async () => {
         if (produtoEditando) {
-          await atualizarProduto(produtoEditando.id, dados);
+          await atualizarProduto(
+            produtoEditando.id,
+            dados
+          );
         } else {
           await criarProduto(dados);
         }
@@ -107,7 +136,8 @@ export default function ProdutosPage() {
         successMessage: editando
           ? "Produto atualizado com sucesso."
           : "Produto cadastrado com sucesso.",
-        errorMessage: "Não foi possível salvar o produto.",
+        errorMessage:
+          "Não foi possível salvar o produto.",
       }
     );
 
@@ -128,7 +158,10 @@ export default function ProdutosPage() {
       async () => {
         await excluirProduto(produto.id);
 
-        if (produtos.length === 1 && pagina > 0) {
+        if (
+          produtos.length === 1 &&
+          pagina > 0
+        ) {
           setPagina((valor) => valor - 1);
         } else {
           await carregarProdutos();
@@ -139,7 +172,8 @@ export default function ProdutosPage() {
       {
         successMessage: (item) =>
           `Produto "${item.nome}" excluído com sucesso.`,
-        errorMessage: "Não foi possível excluir o produto.",
+        errorMessage:
+          "Não foi possível excluir o produto.",
       }
     );
 
@@ -150,7 +184,9 @@ export default function ProdutosPage() {
     }
   }
 
-  function pesquisarProdutos(event: FormEvent<HTMLFormElement>) {
+  function pesquisarProdutos(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
     setPagina(0);
     setBuscaAplicada(busca.trim());
@@ -183,7 +219,9 @@ export default function ProdutosPage() {
         produtoEditando={produtoEditando}
         salvando={salvarAction.loading}
         onSave={salvarProduto}
-        onCancelEdit={() => setProdutoEditando(null)}
+        onCancelEdit={() =>
+          setProdutoEditando(null)
+        }
       />
 
       <Card>
@@ -192,12 +230,10 @@ export default function ProdutosPage() {
             <h2 className="text-lg font-semibold text-slate-900">
               Lista de produtos
             </h2>
-            {buscaAplicada && (
-              <p className="mt-1 text-xs text-slate-500">
-                Resultado da busca por &quot;
-                {buscaAplicada}&quot;
-              </p>
-            )}
+            <p className="mt-1 text-xs text-slate-500">
+              A busca é aplicada automaticamente após
+              500 ms sem digitação.
+            </p>
           </div>
 
           <form
@@ -215,8 +251,11 @@ export default function ProdutosPage() {
               />
             </div>
 
-            <Button type="submit" variant="secondary">
-              Pesquisar
+            <Button
+              type="submit"
+              variant="secondary"
+            >
+              Pesquisar agora
             </Button>
 
             {(busca || buscaAplicada) && (
@@ -238,7 +277,7 @@ export default function ProdutosPage() {
             produtos={produtos}
             excluindoId={excluindoId}
             onEdit={prepararEdicao}
-            onDelete={setProdutoParaExcluir}
+            onDelete={prepararExclusao}
           />
         )}
 
@@ -264,7 +303,9 @@ export default function ProdutosPage() {
             setProdutoParaExcluir(null);
           }
         }}
-        onConfirm={() => void confirmarExclusao()}
+        onConfirm={() =>
+          void confirmarExclusao()
+        }
       />
     </main>
   );
