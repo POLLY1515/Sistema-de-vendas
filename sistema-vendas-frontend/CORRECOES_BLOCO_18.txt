@@ -1,0 +1,20 @@
+Correções aplicadas para o Bloco 18 do ebook:
+
+1. Corrigido src/app/(sistema)/layout.tsx para usar ProtectedRoute + AppLayout.
+2. Mantido src/components/AppLayout.tsx como componente visual separado.
+3. Atualizada src/app/login/page.tsx para usar fazerLogin + AuthContext.atualizarUsuario.
+4. Removida a rota duplicada src/app/dashboard, que conflitava com src/app/(sistema)/dashboard.
+5. Removidos arquivos antigos/duplicados src/services/authService.ts e src/lib/api.ts.
+6. Mantidas as páginas de teste /dashboard e /produtos dentro de app/(sistema).
+7. Ajustado AuthContext para compatibilidade com o lint atual sem alterar o comportamento da sessão.
+8. Verificação TypeScript concluída sem erros.
+9. ESLint concluído sem erros.
+
+Para executar:
+  npm install
+  npm run dev
+
+Depois teste:
+  http://localhost:3000/login
+  http://localhost:3000/dashboard
+  http://localhost:3000/produtos
