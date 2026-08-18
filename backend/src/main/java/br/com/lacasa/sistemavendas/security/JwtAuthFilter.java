@@ -11,6 +11,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import br.com.lacasa.sistemavendas.entity.Usuario;
 import br.com.lacasa.sistemavendas.repository.UsuarioRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,17 +47,44 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        String email = jwtService.extrairEmail(token);
+        try {
 
-        if (email != null
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String email = jwtService.extrairEmail(token);
 
-            Usuario usuario = usuarioRepository
-                    .findByEmailIgnoreCase(email)
-                    .orElse(null);
+            if (email == null || email.isBlank()) {
+                responderNaoAutorizado(
+                        response,
+                        "Token inválido."
+                );
+                return;
+            }
 
-            if (usuario != null
-                    && jwtService.tokenValido(token, usuario.getEmail())) {
+            if (SecurityContextHolder
+                    .getContext()
+                    .getAuthentication() == null) {
+
+                Usuario usuario = usuarioRepository
+                        .findByEmailIgnoreCase(email)
+                        .orElse(null);
+
+                if (usuario == null) {
+                    responderNaoAutorizado(
+                            response,
+                            "Usuário do token não encontrado."
+                    );
+                    return;
+                }
+
+                if (!jwtService.tokenValido(
+                        token,
+                        usuario.getEmail())) {
+
+                    responderNaoAutorizado(
+                            response,
+                            "Token inválido ou expirado."
+                    );
+                    return;
+                }
 
                 SimpleGrantedAuthority permissao =
                         new SimpleGrantedAuthority(
@@ -78,8 +107,49 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .getContext()
                         .setAuthentication(authentication);
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (ExpiredJwtException e) {
+
+            SecurityContextHolder.clearContext();
+
+            responderNaoAutorizado(
+                    response,
+                    "Token expirado. Faça login novamente."
+            );
+
+        } catch (JwtException | IllegalArgumentException e) {
+
+            SecurityContextHolder.clearContext();
+
+            responderNaoAutorizado(
+                    response,
+                    "Token inválido."
+            );
+        }
+    }
+
+    private void responderNaoAutorizado(
+            HttpServletResponse response,
+            String mensagem)
+            throws IOException {
+
+        response.setStatus(
+                HttpServletResponse.SC_UNAUTHORIZED
+        );
+
+        response.setContentType(
+                "application/json;charset=UTF-8"
+        );
+
+        String mensagemSegura =
+                mensagem.replace("\"", "\\\"");
+
+        response.getWriter().write(
+                "{\"mensagem\":\""
+                        + mensagemSegura
+                        + "\"}"
+        );
     }
 }
