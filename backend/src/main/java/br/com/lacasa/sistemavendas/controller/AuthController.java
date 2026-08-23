@@ -34,7 +34,7 @@ public class AuthController {
 		String perfil = autentication.getAuthorities()
 				.stream()
 				.findFirst()
-				.map(autoridade -> autoridade.getAuthority().replace("ROLE", ""))
+				.map(autoridade -> autoridade.getAuthority().replace("ROLE_", ""))
 				.orElse("SEM_PERFIL");
 		
 		return new UsuarioLogadoDTO(email, perfil);

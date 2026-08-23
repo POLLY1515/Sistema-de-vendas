@@ -1,10 +1,10 @@
+import { env } from "@/config/env";
 import { dispararSessaoExpirada } from "@/lib/authEvents";
 import {
   buscarToken,
   removerToken,
 } from "@/lib/authStorage";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type ApiFetchOptions = RequestInit & {
   usarToken?: boolean;
@@ -52,11 +52,6 @@ export async function apiFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  if (!API_URL) {
-    throw new Error(
-      "NEXT_PUBLIC_API_URL nao esta configurada."
-    );
-  }
 
   const {
     usarToken = true,
@@ -70,7 +65,7 @@ export async function apiFetch<T>(
 
   try {
     response = await fetch(
-      `${API_URL}${endpoint}`,
+      `${env.apiUrl}${endpoint}`,
       {
         ...rest,
         headers: {
@@ -140,3 +135,4 @@ export async function apiFetch<T>(
 
   return dados as T;
 }
+
