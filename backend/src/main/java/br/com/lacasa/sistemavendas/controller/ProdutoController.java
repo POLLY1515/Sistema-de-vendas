@@ -27,15 +27,29 @@ import br.com.lacasa.sistemavendas.service.ProdutoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/produtos")
 @RequiredArgsConstructor
+@Tag(name = "Produtos", description = "Operações relacionadas ao gerenciamento de produtos")
 public class ProdutoController {
 
 	private static final Set<String> CAMPOS_ORDENACAO = Set.of("id", "nome", "preco", "quantidadeEstoque");
 
 	private final ProdutoService produtoService;
 
+	@Operation(summary = "Cadstrar produto", description = "Realiza o cadastro de um novo produto no estoque .")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto cadastrado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Dados inválidos enviados na requisição"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+			@ApiResponse(responseCode = "403", description = "Usuario sem permissão para cadastrar produtos")
+
+	})
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<ApiResponseDTO<ProdutoResponseDTO>> cadastrar(@Valid @RequestBody ProdutoRequestDTO dto) {
@@ -46,6 +60,10 @@ public class ProdutoController {
 
 	}
 
+	@Operation(summary = "Listar produtos", description = "Retorna todos os produtos cadastrados no sistema.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produtos encontrados com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+			@ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar produtos") })
 	@GetMapping
 	@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
 	public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
@@ -61,8 +79,13 @@ public class ProdutoController {
 		return ResponseEntity.ok(produtoService.listarPaginado(pageable));
 	}
 
+	@Operation(summary = "Buscar produto por ID", description = "Retorna um produto específico através do seu identificador.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto encontrado com sucesso"),
+			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado") })
 	@GetMapping("/{id}")
-	public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
+	public ResponseEntity<ProdutoResponseDTO> buscarPorId(
+			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id) {
 		return ResponseEntity.ok(produtoService.buscarPorId(id));
 	}
 
@@ -75,16 +98,29 @@ public class ProdutoController {
 		return ResponseEntity.ok(produtoService.buscarPorNome(nome, pageable));
 	}
 
+	@Operation(summary = "Atualizar produto", description = "Atualiza os dados de um produto existente.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Dados inválidos"),
+			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+			@ApiResponse(responseCode = "403", description = "Usuário sem permissão") })
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<ProdutoResponseDTO> atualizar(@PathVariable Long id,
+	public ResponseEntity<ProdutoResponseDTO> atualizar(
+			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id,
 			@Valid @RequestBody ProdutoRequestDTO dto) {
 		return ResponseEntity.ok(produtoService.atualizar(id, dto));
 	}
 
+	@Operation(summary = "Excluir produto", description = "Remove um produto existente do sistema.")
+	@ApiResponses({ @ApiResponse(responseCode = "204", description = "Produto excluído com sucesso"),
+			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+			@ApiResponse(responseCode = "403", description = "Usuário sem permissão") })
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<Void> deletar(@PathVariable Long id) {
+	public ResponseEntity<Void> deletar(
+			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id) {
 		produtoService.deletar(id);
 		return ResponseEntity.noContent().build();
 	}
