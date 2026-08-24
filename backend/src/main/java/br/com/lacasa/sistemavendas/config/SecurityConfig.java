@@ -17,41 +17,98 @@ import br.com.lacasa.sistemavendas.repository.UsuarioRepository;
 import br.com.lacasa.sistemavendas.security.JwtAuthFilter;
 import br.com.lacasa.sistemavendas.security.JwtService;
 
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
 
-	// Cria o JwtAuthFilter e entrega para o Spring gerenciar.
-	@Bean
-	public JwtAuthFilter jwtAuthFilter(JwtService jwtService, UsuarioRepository usuarioRepository) {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-		return new JwtAuthFilter(jwtService, usuarioRepository);
-	}
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+    // Cria o JwtAuthFilter e entrega para o Spring gerenciar.
+    @Bean
+    public JwtAuthFilter jwtAuthFilter(
+            JwtService jwtService,
+            UsuarioRepository usuarioRepository) {
 
-		return http
+        return new JwtAuthFilter(jwtService, usuarioRepository);
+    }
 
-				.csrf(csrf -> csrf.disable())
-				.cors(Customizer.withDefaults())
-				.sessionManagement(session -> session
-						.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST, "/auth/cadastrar", "/auth/login").permitAll()
-						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers("/postgres/***").permitAll()
-						.anyRequest().authenticated()
-						)
-						.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-				.httpBasic(httpBasic -> httpBasic.disable())
-				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-				.build();
-	}
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthFilter jwtAuthFilter) throws Exception {
+
+
+        return http
+
+                .csrf(csrf -> csrf.disable())
+
+                .cors(Customizer.withDefaults())
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
+                .authorizeHttpRequests(auth -> auth
+
+
+                        // Rotas públicas de autenticação
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/auth/cadastrar",
+                                "/auth/login"
+                        ).permitAll()
+
+
+                        // Permite requisições OPTIONS do navegador
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+
+                        // Swagger liberado
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+
+                        // Mantendo sua configuração atual
+                        .requestMatchers("/postgres/**").permitAll()
+
+
+                        // Todo o restante continua protegido pelo JWT
+                        .anyRequest().authenticated()
+
+                )
+
+
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin())
+                )
+
+
+                .httpBasic(httpBasic -> httpBasic.disable())
+
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
+
+                .build();
+    }
+
 }
