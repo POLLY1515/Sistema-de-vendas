@@ -66,8 +66,15 @@ public class ProdutoController {
 			@ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar produtos") })
 	@GetMapping
 	@PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
-	public ResponseEntity<List<ProdutoResponseDTO>> listarTodos() {
-		return ResponseEntity.ok(produtoService.listarTodos());
+	public ResponseEntity<ApiResponseDTO<List<ProdutoResponseDTO>>> listarTodos() {
+		List<ProdutoResponseDTO > produtos = produtoService.listarTodos();
+		ApiResponseDTO<List<ProdutoResponseDTO>> resposta =
+		        new ApiResponseDTO<>(
+		                true,
+		                "Produtos encontrados com sucesso",
+		                produtos
+		        );
+		return ResponseEntity.ok(resposta);
 	}
 
 	
@@ -81,20 +88,25 @@ public class ProdutoController {
 		    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
 		})
 	@GetMapping("/paginado")
-	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> listarPaginado(
-			@Parameter(description = "Número da página", example = "0")
-			@RequestParam(defaultValue = "0") int pagina,
+	public ResponseEntity<ApiResponseDTO<PaginaResponseDTO<ProdutoResponseDTO>>> listarPaginado(
+	        @RequestParam(defaultValue = "0") int pagina,
+	        @RequestParam(defaultValue = "10") int tamanho,
+	        @RequestParam(defaultValue = "nome") String ordenarPor,
+	        @RequestParam(defaultValue = "asc") String direcao) {
 
-			@Parameter(description = "Quantidade de registros por página", example = "10")
-			@RequestParam(defaultValue = "10") int tamanho,
+	    Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
 
-			@Parameter(description = "Campo utilizado para ordenação", example = "nome")
-			@RequestParam(defaultValue = "nome") String ordenarPor,
+	    PaginaResponseDTO<ProdutoResponseDTO> paginaProdutos =
+	            produtoService.listarPaginado(pageable);
 
-			@Parameter(description = "Direção da ordenação", example = "asc")
-			@RequestParam(defaultValue = "asc") String direcao) {
-		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
-		return ResponseEntity.ok(produtoService.listarPaginado(pageable));
+	    ApiResponseDTO<PaginaResponseDTO<ProdutoResponseDTO>> resposta =
+	            new ApiResponseDTO<>(
+	                    true,
+	                    "Produtos paginados encontrados com sucesso",
+	                    paginaProdutos
+	            );
+
+	    return ResponseEntity.ok(resposta);
 	}
 
 	@Operation(summary = "Buscar produto por ID", description = "Retorna um produto específico através do seu identificador.")
@@ -104,9 +116,20 @@ public class ProdutoController {
 	    @ApiResponse(responseCode = "404", description = "Produto não encontrado")
 	})
 	@GetMapping("/{id}")
-	public ResponseEntity<ProdutoResponseDTO> buscarPorId(
-			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id) {
-		return ResponseEntity.ok(produtoService.buscarPorId(id));
+	public ResponseEntity<ApiResponseDTO<ProdutoResponseDTO>> buscarPorId(
+	        @Parameter(description = "ID do produto", example = "1")
+	        @PathVariable Long id) {
+
+	    ProdutoResponseDTO produto = produtoService.buscarPorId(id);
+
+	    ApiResponseDTO<ProdutoResponseDTO> resposta =
+	            new ApiResponseDTO<>(
+	                    true,
+	                    "Produto encontrado com sucesso",
+	                    produto
+	            );
+
+	    return ResponseEntity.ok(resposta);
 	}
 
 	
@@ -120,23 +143,26 @@ public class ProdutoController {
 		    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
 		})
 	@GetMapping("/buscar")
-	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(
-			@Parameter(description = "Nome ou termo utilizado na busca", example = "Notebook")
-			@RequestParam String nome,
-			
-			@Parameter(description = "Número da página", example = "0")
-			@RequestParam(defaultValue = "0") int pagina,
-			
-			@Parameter(description = "Quantidade de registros por página", example = "10")
-			@RequestParam(defaultValue = "10") int tamanho,
-			
-			@Parameter(description = "Campo utilizado para ordenação", example = "nome")
-			@RequestParam(defaultValue = "nome") String ordenarPor,
-			
-			@Parameter(description = "Direção da ordenação", example = "asc")
-			@RequestParam(defaultValue = "asc") String direcao) {
-		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
-		return ResponseEntity.ok(produtoService.buscarPorNome(nome, pageable));
+	public ResponseEntity<ApiResponseDTO<PaginaResponseDTO<ProdutoResponseDTO>>> buscarPorNome(
+	        @RequestParam String nome,
+	        @RequestParam(defaultValue = "0") int pagina,
+	        @RequestParam(defaultValue = "10") int tamanho,
+	        @RequestParam(defaultValue = "nome") String ordenarPor,
+	        @RequestParam(defaultValue = "asc") String direcao) {
+
+	    Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
+
+	    PaginaResponseDTO<ProdutoResponseDTO> produtos =
+	            produtoService.buscarPorNome(nome, pageable);
+
+	    ApiResponseDTO<PaginaResponseDTO<ProdutoResponseDTO>> resposta =
+	            new ApiResponseDTO<>(
+	                    true,
+	                    "Busca de produtos realizada com sucesso",
+	                    produtos
+	            );
+
+	    return ResponseEntity.ok(resposta);
 	}
 
 	@Operation(summary = "Atualizar produto", description = "Atualiza os dados de um produto existente.")
@@ -147,10 +173,22 @@ public class ProdutoController {
 			@ApiResponse(responseCode = "403", description = "Usuário sem permissão") })
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<ProdutoResponseDTO> atualizar(
-			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id,
-			@Valid @RequestBody ProdutoRequestDTO dto) {
-		return ResponseEntity.ok(produtoService.atualizar(id, dto));
+	public ResponseEntity<ApiResponseDTO<ProdutoResponseDTO>> atualizar(
+	        @Parameter(description = "ID do produto", example = "1")
+	        @PathVariable Long id,
+	        @Valid @RequestBody ProdutoRequestDTO dto) {
+
+	    ProdutoResponseDTO produto =
+	            produtoService.atualizar(id, dto);
+
+	    ApiResponseDTO<ProdutoResponseDTO> resposta =
+	            new ApiResponseDTO<>(
+	                    true,
+	                    "Produto atualizado com sucesso",
+	                    produto
+	            );
+
+	    return ResponseEntity.ok(resposta);
 	}
 
 	@Operation(summary = "Excluir produto", description = "Remove um produto existente do sistema.")
