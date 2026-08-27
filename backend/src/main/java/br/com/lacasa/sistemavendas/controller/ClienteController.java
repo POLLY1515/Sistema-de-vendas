@@ -45,7 +45,7 @@ public class ClienteController {
 	@Operation(summary = "Cadastrar cliente", description = "Realiza o cadastro de um novo cliente no sistema.")
 	@ApiResponses({ @ApiResponse(responseCode = "201", description = "Cliente cadastrado com sucesso"),
 			@ApiResponse(responseCode = "400", description = "Dados inválidos enviados na requisição"),
-			@ApiResponse(responseCode = "404", description = "Cliente não encontrado") })
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado") })
 
 	@PostMapping
 	public ResponseEntity<ClienteResponseDTO> cadastrar(@Valid @RequestBody ClienteRequestDTO request) {
@@ -53,7 +53,8 @@ public class ClienteController {
 	}
 
 	@Operation(summary = "Listar clientes", description = "Retorna todos os clientes cadastrados no sistema.")
-	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Clientes encontrados com sucesso") })
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Clientes encontrados com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado") })
 	@GetMapping
 	public ResponseEntity<List<ClienteResponseDTO>> listar() {
 		return ResponseEntity.ok(clienteService.listarTodos());
@@ -61,6 +62,7 @@ public class ClienteController {
 
 	@Operation(summary = "Buscar cliente por ID", description = "Retorna um cliente específico através do seu identificador.")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Cliente encontrado com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
 			@ApiResponse(responseCode = "404", description = "Cliente não encontrado") })
 	@GetMapping("/{id}")
 	public ResponseEntity<ClienteResponseDTO> buscarPorId(
@@ -70,7 +72,8 @@ public class ClienteController {
 
 	@Operation(summary = "Buscar clientes", description = "Realiza uma busca paginada de clientes utilizando um termo de pesquisa.")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Clientes encontrados com sucesso"),
-			@ApiResponse(responseCode = "400", description = "Parâmetros de busca inválidos") })
+			@ApiResponse(responseCode = "400", description = "Parâmetros de busca inválidos"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado") })
 	@GetMapping("/buscar")
 	public ResponseEntity<PaginaResponseDTO<ClienteResponseDTO>> buscarPorTermo(
 			@Parameter(description = "Termo utilizado para buscar clientes", example = "João") @RequestParam String termo,
@@ -89,6 +92,7 @@ public class ClienteController {
 	@Operation(summary = "Atualizar cliente", description = "Atualiza os dados de um cliente existente no sistema.")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Cliente atualizado com sucesso"),
 			@ApiResponse(responseCode = "400", description = "Dados inválidos enviados na requisição"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
 			@ApiResponse(responseCode = "404", description = "Cliente não encontrado") })
 	@PutMapping("/{id}")
 	public ResponseEntity<ClienteResponseDTO> atualizar(
@@ -99,6 +103,7 @@ public class ClienteController {
 
 	@Operation(summary = "Excluir cliente", description = "Remove um cliente existente do sistema.")
 	@ApiResponses({ @ApiResponse(responseCode = "204", description = "Cliente excluído com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
 			@ApiResponse(responseCode = "404", description = "Cliente não encontrado") })
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deletar(
