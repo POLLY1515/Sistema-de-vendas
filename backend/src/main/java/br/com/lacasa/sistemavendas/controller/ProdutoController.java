@@ -43,9 +43,9 @@ public class ProdutoController {
 
 	private final ProdutoService produtoService;
 
-	@Operation(summary = "Cadstrar produto", description = "Realiza o cadastro de um novo produto no estoque .")
-	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto cadastrado com sucesso"),
-			@ApiResponse(responseCode = "400", description = "Dados inválidos enviados na requisição"),
+	@Operation(summary = "Cadastrar produto", description = "Realiza o cadastro de um novo produto no estoque.")
+	@ApiResponses({ @ApiResponse(responseCode = "201", description = "Produto cadastrado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Dados inválidos ou regra de negócio violada"),
 			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
 			@ApiResponse(responseCode = "403", description = "Usuario sem permissão para cadastrar produtos")
 
@@ -70,29 +70,70 @@ public class ProdutoController {
 		return ResponseEntity.ok(produtoService.listarTodos());
 	}
 
+	
+	@Operation(
+		    summary = "Listar produtos paginados",
+		    description = "Retorna os produtos cadastrados de forma paginada e ordenada."
+		)
+		@ApiResponses({
+		    @ApiResponse(responseCode = "200", description = "Produtos encontrados com sucesso"),
+		    @ApiResponse(responseCode = "400", description = "Parâmetros de paginação ou ordenação inválidos"),
+		    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+		})
 	@GetMapping("/paginado")
 	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> listarPaginado(
-			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
+			@Parameter(description = "Número da página", example = "0")
+			@RequestParam(defaultValue = "0") int pagina,
+
+			@Parameter(description = "Quantidade de registros por página", example = "10")
+			@RequestParam(defaultValue = "10") int tamanho,
+
+			@Parameter(description = "Campo utilizado para ordenação", example = "nome")
 			@RequestParam(defaultValue = "nome") String ordenarPor,
+
+			@Parameter(description = "Direção da ordenação", example = "asc")
 			@RequestParam(defaultValue = "asc") String direcao) {
 		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
 		return ResponseEntity.ok(produtoService.listarPaginado(pageable));
 	}
 
 	@Operation(summary = "Buscar produto por ID", description = "Retorna um produto específico através do seu identificador.")
-	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto encontrado com sucesso"),
-			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
-			@ApiResponse(responseCode = "401", description = "Usuário não autenticado") })
+	@ApiResponses({
+	    @ApiResponse(responseCode = "200", description = "Produto encontrado com sucesso"),
+	    @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+	    @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+	})
 	@GetMapping("/{id}")
 	public ResponseEntity<ProdutoResponseDTO> buscarPorId(
 			@Parameter(description = "ID do produto", example = "1") @PathVariable Long id) {
 		return ResponseEntity.ok(produtoService.buscarPorId(id));
 	}
 
+	
+	@Operation(
+		    summary = "Buscar produtos por nome",
+		    description = "Realiza uma busca paginada de produtos utilizando o nome informado."
+		)
+		@ApiResponses({
+		    @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso"),
+		    @ApiResponse(responseCode = "400", description = "Parâmetros de busca, paginação ou ordenação inválidos"),
+		    @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
+		})
 	@GetMapping("/buscar")
-	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(@RequestParam String nome,
-			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "10") int tamanho,
+	public ResponseEntity<PaginaResponseDTO<ProdutoResponseDTO>> buscarPorNome(
+			@Parameter(description = "Nome ou termo utilizado na busca", example = "Notebook")
+			@RequestParam String nome,
+			
+			@Parameter(description = "Número da página", example = "0")
+			@RequestParam(defaultValue = "0") int pagina,
+			
+			@Parameter(description = "Quantidade de registros por página", example = "10")
+			@RequestParam(defaultValue = "10") int tamanho,
+			
+			@Parameter(description = "Campo utilizado para ordenação", example = "nome")
 			@RequestParam(defaultValue = "nome") String ordenarPor,
+			
+			@Parameter(description = "Direção da ordenação", example = "asc")
 			@RequestParam(defaultValue = "asc") String direcao) {
 		Pageable pageable = criarPageable(pagina, tamanho, ordenarPor, direcao);
 		return ResponseEntity.ok(produtoService.buscarPorNome(nome, pageable));
@@ -100,7 +141,7 @@ public class ProdutoController {
 
 	@Operation(summary = "Atualizar produto", description = "Atualiza os dados de um produto existente.")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
-			@ApiResponse(responseCode = "400", description = "Dados inválidos"),
+			@ApiResponse(responseCode = "400", description = "Dados inválidos ou tregra de negócio violada"),
 			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
 			@ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
 			@ApiResponse(responseCode = "403", description = "Usuário sem permissão") })
