@@ -17,6 +17,21 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	
+	@ExceptionHandler(CredenciaisInvalidasException.class)
+	public ResponseEntity<ErroResponseDTO> tratarCredenciaisInvalidas(
+	 CredenciaisInvalidasException ex,
+	 HttpServletRequest request) {
+	 return criarResposta(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+	}
+
+
+	@ExceptionHandler({Conflito.class, EstoqueInsuficienteException.class})
+	public ResponseEntity<ErroResponseDTO> tratarConflito(
+	 RuntimeException ex,
+	 HttpServletRequest request) {
+	 return criarResposta(HttpStatus.CONFLICT, ex.getMessage(), request);
+	}
 
 	@ExceptionHandler(RecursoNaoEncontradoException.class)
 	public ResponseEntity<ErroResponseDTO> tratarRecursoNaoEncontrado(RecursoNaoEncontradoException ex,
@@ -24,10 +39,13 @@ public class GlobalExceptionHandler {
 		return criarResposta(HttpStatus.NOT_FOUND, ex.getMessage(), request);
 	}
 
-	@ExceptionHandler({ RegraNegocioException.class, EstoqueInsuficienteException.class })
-	public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(RuntimeException ex, HttpServletRequest request) {
-		return criarResposta(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+	@ExceptionHandler(RegraNegocioException.class)
+	public ResponseEntity<ErroResponseDTO> tratarRegraNegocio(
+	 RegraNegocioException ex,
+	 HttpServletRequest request) {
+	 return criarResposta(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
 	}
+
 
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

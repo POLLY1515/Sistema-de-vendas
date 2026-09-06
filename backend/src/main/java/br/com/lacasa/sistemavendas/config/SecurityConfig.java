@@ -84,8 +84,6 @@ public class SecurityConfig {
                         ).permitAll()
 
 
-                        // Mantendo sua configuração atual
-                        .requestMatchers("/postgres/**").permitAll()
 
 
                         // Todo o restante continua protegido pelo JWT

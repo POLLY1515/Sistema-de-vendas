@@ -1,0 +1,9 @@
+CREATE TABLE clientes (
+ id BIGSERIAL PRIMARY KEY,
+ nome VARCHAR(120) NOT NULL,
+ email VARCHAR(160) NOT NULL,
+ telefone VARCHAR(20) NOT NULL UNIQUE,
+ cpf VARCHAR(11) NOT NULL UNIQUE
+);
+CREATE UNIQUE INDEX uk_clientes_email_lower
+ ON clientes (LOWER(email));
