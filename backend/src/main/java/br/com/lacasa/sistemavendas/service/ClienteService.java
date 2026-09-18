@@ -23,7 +23,9 @@ public class ClienteService {
 
 	public ClienteResponseDTO cadastrar(ClienteRequestDTO request) {
 		validarEmailECpf(request.getEmail(), request.getCpf(), null);
-		validarTelefone(request.getTelefone());
+		 validarTelefone(request.getTelefone(), null);
+		
+			
 
 		Cliente cliente = new Cliente();
 		cliente.setNome(request.getNome());
@@ -58,6 +60,8 @@ public class ClienteService {
 	public ClienteResponseDTO atualizar(Long id, ClienteRequestDTO request) {
 		Cliente cliente = buscarClienteOuFalhar(id);
 		validarEmailECpf(request.getEmail(), request.getCpf(), id);
+		 validarTelefone(request.getTelefone(), id);
+
 
 		cliente.setNome(request.getNome());
 		cliente.setEmail(request.getEmail());
@@ -92,12 +96,16 @@ public class ClienteService {
 		}
 	}
 
-	private void validarTelefone(String telefone) {
-
-		if (clienteRepository.existsByTelefone(telefone)) {
-			throw new RegraNegocioException("Já existe um cliente cadastrado com este Telefone!");
+	private void validarTelefone(String telefone, Long idAtual) {
+		 boolean telefoneJaCadastrado = idAtual == null
+		 ? clienteRepository.existsByTelefone(telefone)
+		 : clienteRepository.existsByTelefoneAndIdNot(telefone, idAtual);
+		 if (telefoneJaCadastrado) {
+		 throw new RegraNegocioException(
+		 "Já existe um cliente cadastrado com este telefone."
+		 );
+		 }
 		}
-	}
 
 	private ClienteResponseDTO converterParaResponse(Cliente cliente) {
 		return new ClienteResponseDTO(cliente.getId(), cliente.getNome(), cliente.getEmail(), cliente.getTelefone(),
