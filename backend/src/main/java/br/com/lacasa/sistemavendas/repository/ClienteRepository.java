@@ -28,4 +28,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
             String email,
             Pageable pageable
     );
+    
+    boolean existsByTelefoneAndIdNot(String telefone, Long id);
+
 }
