@@ -28,294 +28,195 @@ import br.com.lacasa.sistemavendas.repository.ProdutoRepository;
 @Service
 public class PedidoService {
 
-    private final PedidoRepository pedidoRepository;
-    private final ClienteRepository clienteRepository;
-    private final ProdutoRepository produtoRepository;
+	private final PedidoRepository pedidoRepository;
+	private final ClienteRepository clienteRepository;
+	private final ProdutoRepository produtoRepository;
 
-    public PedidoService(
-            PedidoRepository pedidoRepository,
-            ClienteRepository clienteRepository,
-            ProdutoRepository produtoRepository) {
+	public PedidoService(PedidoRepository pedidoRepository, ClienteRepository clienteRepository,
+			ProdutoRepository produtoRepository) {
 
-        this.pedidoRepository = pedidoRepository;
-        this.clienteRepository = clienteRepository;
-        this.produtoRepository = produtoRepository;
-    }
+		this.pedidoRepository = pedidoRepository;
+		this.clienteRepository = clienteRepository;
+		this.produtoRepository = produtoRepository;
+	}
 
-    @Transactional
-    public PedidoResponseDTO criarPedido(PedidoRequestDTO request) {
+	@Transactional
+	public PedidoResponseDTO criarPedido(PedidoRequestDTO request) {
+		Cliente cliente = clienteRepository.findById(request.clienteId())
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado."));
+		if (request.itens() == null || request.itens().isEmpty()) {
+			throw new RegraNegocioException("O pedido deve possuir pelo menos um item.");
+		}
+		long produtosDistintos = request.itens().stream().map(ItemPedidoRequestDTO::produtoId).distinct().count();
+		if (produtosDistintos != request.itens().size()) {
+			throw new RegraNegocioException("O mesmo produto não pode aparecer mais de uma vez no pedido.");
+		}
+		Pedido pedido = new Pedido();
+		pedido.setCliente(cliente);
+		List<ItemPedidoRequestDTO> itensOrdenados = request.itens().stream()
+				.sorted(java.util.Comparator.comparing(ItemPedidoRequestDTO::produtoId))
 
-        Cliente cliente = clienteRepository
-                .findById(request.clienteId())
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
-                                "Cliente não encontrado."
-                        )
-                );
+				.toList();
+		for (ItemPedidoRequestDTO itemRequest : itensOrdenados) {
+			Produto produto = produtoRepository.findByIdParaAtualizacao(itemRequest.produtoId()).orElseThrow(
+					() -> new RecursoNaoEncontradoException("Produto não encontrado: " + itemRequest.produtoId()));
+			produto.baixarEstoque(itemRequest.quantidade());
+			ItemPedido item = new ItemPedido();
+			item.setProduto(produto);
+			item.setQuantidade(itemRequest.quantidade());
+			item.setPrecoUnitario(produto.getPreco());
+			item.calcularSubtotal();
+			pedido.adicionarItem(item);
+		}
+		pedido.calcularValorTotal();
+		return transformarEmResponse(pedidoRepository.save(pedido));
+	}
 
-        if (request.itens() == null || request.itens().isEmpty()) {
-            throw new RegraNegocioException(
-                    "O pedido deve possuir pelo menos um item."
-            );
-        }
+	@Transactional
+	public PedidoResponseDTO cancelarPedido(Long id) {
 
-        Pedido pedido = new Pedido();
-        pedido.setCliente(cliente);
+		Pedido pedido = buscarEntidadePorId(id);
 
-        for (ItemPedidoRequestDTO itemRequest : request.itens()) {
+		if (pedido.getStatus() == StatusPedido.CANCELADO) {
+			throw new RegraNegocioException("Este pedido já foi cancelado.");
+		}
 
-            Produto produto = produtoRepository
-                    .findById(itemRequest.produtoId())
-                    .orElseThrow(() ->
-                            new RecursoNaoEncontradoException(
-                                    "Produto não encontrado: "
-                                            + itemRequest.produtoId()
-                            )
-                    );
+		if (pedido.getStatus() == StatusPedido.FINALIZADO) {
+			throw new RegraNegocioException("Não é possível cancelar um pedido finalizado.");
+		}
 
-            /*
-             * A própria entidade Produto valida:
-             * - quantidade nula;
-             * - quantidade igual ou menor que zero;
-             * - estoque insuficiente.
-             */
-            produto.baixarEstoque(itemRequest.quantidade());
+		for (ItemPedido item : pedido.getItens()) {
+			Produto produto = item.getProduto();
+			produto.devolverEstoque(item.getQuantidade());
+		}
 
-            ItemPedido item = new ItemPedido();
-            item.setProduto(produto);
-            item.setQuantidade(itemRequest.quantidade());
+		pedido.setStatus(StatusPedido.CANCELADO);
 
-            /*
-             * O preço atual do produto é copiado para o item.
-             * Assim, o pedido mantém o preço praticado no momento da venda.
-             */
-            item.setPrecoUnitario(produto.getPreco());
-            item.calcularSubtotal();
+		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-            pedido.adicionarItem(item);
-        }
+		return transformarEmResponse(pedidoSalvo);
+	}
 
-        pedido.calcularValorTotal();
+	@Transactional
+	public PedidoResponseDTO finalizarPedido(Long id) {
 
-        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+		Pedido pedido = buscarEntidadePorId(id);
 
-        return transformarEmResponse(pedidoSalvo);
-    }
+		if (pedido.getStatus() == StatusPedido.CANCELADO) {
+			throw new RegraNegocioException("Não é possível finalizar um pedido cancelado.");
+		}
 
-    @Transactional
-    public PedidoResponseDTO cancelarPedido(Long id) {
+		if (pedido.getStatus() == StatusPedido.FINALIZADO) {
+			throw new RegraNegocioException("Este pedido já está finalizado.");
+		}
 
-        Pedido pedido = buscarEntidadePorId(id);
+		pedido.setStatus(StatusPedido.FINALIZADO);
 
-        if (pedido.getStatus() == StatusPedido.CANCELADO) {
-            throw new RegraNegocioException(
-                    "Este pedido já foi cancelado."
-            );
-        }
+		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-        if (pedido.getStatus() == StatusPedido.FINALIZADO) {
-            throw new RegraNegocioException(
-                    "Não é possível cancelar um pedido finalizado."
-            );
-        }
+		return transformarEmResponse(pedidoSalvo);
+	}
 
-        for (ItemPedido item : pedido.getItens()) {
-            Produto produto = item.getProduto();
-            produto.devolverEstoque(item.getQuantidade());
-        }
+	@Transactional(readOnly = true)
+	public PedidoResponseDTO buscarPorId(Long id) {
 
-        pedido.setStatus(StatusPedido.CANCELADO);
+		Pedido pedido = buscarEntidadePorId(id);
 
-        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+		return transformarEmResponse(pedido);
+	}
 
-        return transformarEmResponse(pedidoSalvo);
-    }
+	@Transactional(readOnly = true)
+	public Page<PedidoResponseDTO> listarTodos(Pageable pageable) {
 
-    @Transactional
-    public PedidoResponseDTO finalizarPedido(Long id) {
+		return pedidoRepository.findAll(pageable).map(this::transformarEmResponse);
+	}
 
-        Pedido pedido = buscarEntidadePorId(id);
+	@Transactional(readOnly = true)
+	public Page<PedidoResponseDTO> listarPorStatus(StatusPedido status, Pageable pageable) {
 
-        if (pedido.getStatus() == StatusPedido.CANCELADO) {
-            throw new RegraNegocioException(
-                    "Não é possível finalizar um pedido cancelado."
-            );
-        }
+		return pedidoRepository.findByStatus(status, pageable).map(this::transformarEmResponse);
+	}
 
-        if (pedido.getStatus() == StatusPedido.FINALIZADO) {
-            throw new RegraNegocioException(
-                    "Este pedido já está finalizado."
-            );
-        }
+	@Transactional(readOnly = true)
+	public Page<PedidoResponseDTO> listarPorCliente(Long clienteId, Pageable pageable) {
 
-        pedido.setStatus(StatusPedido.FINALIZADO);
+		/*
+		 * Essa verificação diferencia: cliente inexistente de cliente existente sem
+		 * pedidos.
+		 */
+		if (!clienteRepository.existsById(clienteId)) {
+			throw new RecursoNaoEncontradoException("Cliente não encontrado.");
+		}
 
-        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+		return pedidoRepository.findByClienteId(clienteId, pageable).map(this::transformarEmResponse);
+	}
 
-        return transformarEmResponse(pedidoSalvo);
-    }
+	@Transactional(readOnly = true)
+	public Page<PedidoResponseDTO> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim, Pageable pageable) {
 
-    @Transactional(readOnly = true)
-    public PedidoResponseDTO buscarPorId(Long id) {
+		validarPeriodo(inicio, fim);
 
-        Pedido pedido = buscarEntidadePorId(id);
+		return pedidoRepository.findByDataCriacaoBetween(inicio, fim, pageable).map(this::transformarEmResponse);
+	}
 
-        return transformarEmResponse(pedido);
-    }
+	@Transactional(readOnly = true)
+	public Page<PedidoResponseDTO> listarPorStatusEPeriodo(StatusPedido status, LocalDateTime inicio, LocalDateTime fim,
+			Pageable pageable) {
 
-    @Transactional(readOnly = true)
-    public Page<PedidoResponseDTO> listarTodos(Pageable pageable) {
+		validarPeriodo(inicio, fim);
 
-        return pedidoRepository
-                .findAll(pageable)
-                .map(this::transformarEmResponse);
-    }
+		return pedidoRepository.findByStatusAndDataCriacaoBetween(status, inicio, fim, pageable)
+				.map(this::transformarEmResponse);
+	}
 
-    @Transactional(readOnly = true)
-    public Page<PedidoResponseDTO> listarPorStatus(
-            StatusPedido status,
-            Pageable pageable) {
+	@Transactional(readOnly = true)
+	public ResumoVendasDTO gerarResumoDeVendasFinalizadas() {
 
-        return pedidoRepository
-                .findByStatus(status, pageable)
-                .map(this::transformarEmResponse);
-    }
+		/*
+		 * Pageable.unpaged() utiliza o mesmo método paginado, mas solicita todos os
+		 * registros finalizados.
+		 *
+		 * Para uma aplicação com muitos pedidos, o ideal futuro é calcular o resumo
+		 * diretamente no banco com SUM e COUNT.
+		 */
+		Page<Pedido> paginaPedidosFinalizados = pedidoRepository.findByStatus(StatusPedido.FINALIZADO,
+				Pageable.unpaged());
 
-    @Transactional(readOnly = true)
-    public Page<PedidoResponseDTO> listarPorCliente(
-            Long clienteId,
-            Pageable pageable) {
+		BigDecimal totalVendido = paginaPedidosFinalizados.getContent().stream().map(Pedido::getValorTotal)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        /*
-         * Essa verificação diferencia:
-         * cliente inexistente de cliente existente sem pedidos.
-         */
-        if (!clienteRepository.existsById(clienteId)) {
-            throw new RecursoNaoEncontradoException(
-                    "Cliente não encontrado."
-            );
-        }
+		long quantidadePedidos = paginaPedidosFinalizados.getTotalElements();
 
-        return pedidoRepository
-                .findByClienteId(clienteId, pageable)
-                .map(this::transformarEmResponse);
-    }
+		return new ResumoVendasDTO(quantidadePedidos, totalVendido);
+	}
 
-    @Transactional(readOnly = true)
-    public Page<PedidoResponseDTO> listarPorPeriodo(
-            LocalDateTime inicio,
-            LocalDateTime fim,
-            Pageable pageable) {
+	private Pedido buscarEntidadePorId(Long id) {
 
-        validarPeriodo(inicio, fim);
+		return pedidoRepository.findById(id)
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado."));
+	}
 
-        return pedidoRepository
-                .findByDataCriacaoBetween(inicio, fim, pageable)
-                .map(this::transformarEmResponse);
-    }
+	private void validarPeriodo(LocalDateTime inicio, LocalDateTime fim) {
 
-    @Transactional(readOnly = true)
-    public Page<PedidoResponseDTO> listarPorStatusEPeriodo(
-            StatusPedido status,
-            LocalDateTime inicio,
-            LocalDateTime fim,
-            Pageable pageable) {
+		if (inicio == null || fim == null) {
+			throw new RegraNegocioException("As datas inicial e final são obrigatórias.");
+		}
 
-        validarPeriodo(inicio, fim);
+		if (inicio.isAfter(fim)) {
+			throw new RegraNegocioException("A data inicial não pode ser posterior à data final.");
+		}
+	}
 
-        return pedidoRepository
-                .findByStatusAndDataCriacaoBetween(
-                        status,
-                        inicio,
-                        fim,
-                        pageable
-                )
-                .map(this::transformarEmResponse);
-    }
+	private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
 
-    @Transactional(readOnly = true)
-    public ResumoVendasDTO gerarResumoDeVendasFinalizadas() {
+		List<ItemPedidoResponseDTO> itens = pedido
+				.getItens().stream().map(item -> new ItemPedidoResponseDTO(item.getProduto().getId(),
+						item.getProduto().getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getSubtotal()))
+				.toList();
 
-        /*
-         * Pageable.unpaged() utiliza o mesmo método paginado,
-         * mas solicita todos os registros finalizados.
-         *
-         * Para uma aplicação com muitos pedidos, o ideal futuro
-         * é calcular o resumo diretamente no banco com SUM e COUNT.
-         */
-        Page<Pedido> paginaPedidosFinalizados =
-                pedidoRepository.findByStatus(
-                        StatusPedido.FINALIZADO,
-                        Pageable.unpaged()
-                );
+		return new PedidoResponseDTO(pedido.getId(), pedido.getCliente().getId(), pedido.getCliente().getNome(),
+				pedido.getDataPedido(),
 
-        BigDecimal totalVendido = paginaPedidosFinalizados
-                .getContent()
-                .stream()
-                .map(Pedido::getValorTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        long quantidadePedidos =
-                paginaPedidosFinalizados.getTotalElements();
-
-        return new ResumoVendasDTO(
-                quantidadePedidos,
-                totalVendido
-        );
-    }
-
-    private Pedido buscarEntidadePorId(Long id) {
-
-        return pedidoRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
-                                "Pedido não encontrado."
-                        )
-                );
-    }
-
-    private void validarPeriodo(
-            LocalDateTime inicio,
-            LocalDateTime fim) {
-
-        if (inicio == null || fim == null) {
-            throw new RegraNegocioException(
-                    "As datas inicial e final são obrigatórias."
-            );
-        }
-
-        if (inicio.isAfter(fim)) {
-            throw new RegraNegocioException(
-                    "A data inicial não pode ser posterior à data final."
-            );
-        }
-    }
-
-    private PedidoResponseDTO transformarEmResponse(Pedido pedido) {
-
-        List<ItemPedidoResponseDTO> itens = pedido
-                .getItens()
-                .stream()
-                .map(item -> new ItemPedidoResponseDTO(
-                        item.getProduto().getId(),
-                        item.getProduto().getNome(),
-                        item.getQuantidade(),
-                        item.getPrecoUnitario(),
-                        item.getSubtotal()
-                ))
-                .toList();
-
-        return new PedidoResponseDTO(
-                pedido.getId(),
-                pedido.getCliente().getId(),
-                pedido.getCliente().getNome(),
-                pedido.getDataPedido(),
-
-                pedido.getStatus(),
-                pedido.getDataCriacao(),
-                pedido.getValorTotal(),
-                itens
-        );
-    }
+				pedido.getStatus(), pedido.getDataCriacao(), pedido.getValorTotal(), itens);
+	}
 }
