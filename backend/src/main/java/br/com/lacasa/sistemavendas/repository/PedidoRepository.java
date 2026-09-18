@@ -33,4 +33,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
             LocalDateTime fim,
             Pageable pageable
     );
+    
+    boolean existsByClienteId(Long clienteId);
+
 }
