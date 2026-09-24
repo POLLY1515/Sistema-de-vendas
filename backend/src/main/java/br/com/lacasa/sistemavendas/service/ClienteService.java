@@ -10,9 +10,11 @@ import br.com.lacasa.sistemavendas.dto.ClienteRequestDTO;
 import br.com.lacasa.sistemavendas.dto.ClienteResponseDTO;
 import br.com.lacasa.sistemavendas.dto.PaginaResponseDTO;
 import br.com.lacasa.sistemavendas.entity.Cliente;
+import br.com.lacasa.sistemavendas.exception.ConflitoException;
 import br.com.lacasa.sistemavendas.exception.RecursoNaoEncontradoException;
 import br.com.lacasa.sistemavendas.exception.RegraNegocioException;
 import br.com.lacasa.sistemavendas.repository.ClienteRepository;
+import br.com.lacasa.sistemavendas.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 public class ClienteService {
 
 	private final ClienteRepository clienteRepository;
+	private final PedidoRepository pedidoRepository;
+
 
 	public ClienteResponseDTO cadastrar(ClienteRequestDTO request) {
 		validarEmailECpf(request.getEmail(), request.getCpf(), null);
@@ -72,8 +76,14 @@ public class ClienteService {
 	}
 
 	public void remover(Long id) {
-		clienteRepository.delete(buscarClienteOuFalhar(id));
-	}
+		 Cliente cliente = buscarClienteOuFalhar(id);
+		 if (pedidoRepository.existsByClienteId(id)) {
+		 throw new ConflitoException(
+		 "Cliente possui pedidos e não pode ser excluído."
+		 );
+		 }
+		 clienteRepository.delete(cliente);
+		}
 
 	private Cliente buscarClienteOuFalhar(Long id) {
 		return clienteRepository.findById(id)
@@ -117,3 +127,4 @@ public class ClienteService {
 				pagina.getTotalElements(), pagina.getTotalPages(), pagina.isFirst(), pagina.isLast());
 	}
 }
+
