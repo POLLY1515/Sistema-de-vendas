@@ -85,10 +85,18 @@ public class PedidoService {
 			throw new RegraNegocioException("Não é possível cancelar um pedido finalizado.");
 		}
 
-		for (ItemPedido item : pedido.getItens()) {
-			Produto produto = item.getProduto();
-			produto.devolverEstoque(item.getQuantidade());
-		}
+		List<ItemPedido> itensOrdenados = pedido.getItens().stream()
+				 .sorted(java.util.Comparator.comparing(
+				 item -> item.getProduto().getId()))
+				 .toList();
+				for (ItemPedido item : itensOrdenados) {
+				 Produto produto = produtoRepository
+				 .findByIdParaAtualizacao(item.getProduto().getId())
+				 .orElseThrow(() ->
+				 new RecursoNaoEncontradoException("Produto não encontrado."));
+				 produto.devolverEstoque(item.getQuantidade());
+				}
+
 
 		pedido.setStatus(StatusPedido.CANCELADO);
 
