@@ -1,14 +1,14 @@
 # 🛒 Sistema de Vendas API
 
-API REST backend desenvolvida em **Java 21 com Spring Boot** para gerenciamento de operações comerciais.
+## 📌 Sobre o projeto
 
-O projeto implementa uma aplicação de vendas com gerenciamento de usuários, clientes, produtos e pedidos, aplicando conceitos utilizados no desenvolvimento de APIs profissionais, como **arquitetura em camadas, persistência de dados, DTOs, validação, autenticação JWT e controle de acesso por perfil de usuário**.
+API REST backend desenvolvida em **Java 21 e Spring Boot** para gerenciamento de operações, aplicando conceitos utilizados em aplicações profissionais como autenticação, segurança, persistência de dados e arquitetura em camadas.
 
----
+O sistema simula uma aplicação backend completa, contendo gerenciamento de usuários, clientes, produtos e pedidos, com autenticação JWT, controle de acesso por perfil, persistência em PostgreSQL e organização seguindo boas práticas de desenvolvimento.
 
-## ⭐ Principais recursos
+### ⭐ Principais recursos
 
-🔐 **Autenticação stateless com JWT**
+🔐 **Autenticação e autorização com JWT**
 
 👥 **Controle de acesso por perfis ADMIN e VENDEDOR**
 
@@ -32,35 +32,35 @@ O projeto implementa uma aplicação de vendas com gerenciamento de usuários, c
 
 # 🚀 Objetivo
 
-Construir uma **API REST para gerenciamento de operações comerciais**, aplicando práticas utilizadas no desenvolvimento de sistemas backend.
+Construir uma **API REST backend aplicando práticas utilizadas no desenvolvimento de sistemas profissionais**.
 
 O projeto foi desenvolvido com foco em:
 
-* organização e separação de responsabilidades;
-* criação de endpoints REST;
-* persistência de dados;
-* aplicação de regras de negócio;
-* validação de dados;
-* autenticação e autorização;
-* segurança utilizando JWT;
-* integração futura com aplicações frontend.
+- organização e separação de responsabilidades;
+- criação de endpoints REST;
+- persistência de dados;
+- aplicação de regras de negócio;
+- validação de dados;
+- autenticação e autorização;
+- segurança utilizando JWT;
+- integração futura com aplicações frontend.
 
 ---
 
 # 🛠️ Tecnologias utilizadas
 
-* **Java 21**
-* **Spring Boot**
-* **Spring Security**
-* **JWT — JSON Web Token**
-* **Spring Data JPA**
-* **Hibernate**
-* **PostgreSQL**
-* **Maven**
-* **Lombok**
-* **Bean Validation**
-* **Git**
-* **GitHub**
+- **Java 21**
+- **Spring Boot**
+- **Spring Security**
+- **JWT — JSON Web Token**
+- **Spring Data JPA**
+- **Hibernate**
+- **PostgreSQL**
+- **Maven**
+- **Lombok**
+- **Bean Validation**
+- **Git**
+- **GitHub**
 
 ---
 
@@ -72,7 +72,7 @@ A aplicação utiliza uma **arquitetura em camadas**, mantendo responsabilidades
         Requisição HTTP
               │
               ▼
-         Controller
+          Controller
               │
               ▼
            Service
@@ -82,6 +82,8 @@ A aplicação utiliza uma **arquitetura em camadas**, mantendo responsabilidades
               │
               ▼
       PostgreSQL Database
+
+
 ```
 
 ## 📂 Responsabilidade das camadas
